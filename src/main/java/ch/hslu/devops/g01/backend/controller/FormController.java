@@ -1,4 +1,4 @@
-package ch.hslu.devops.g01;
+package ch.hslu.devops.g01.backend.controller;
 
 import io.micronaut.http.annotation.*;
 
