@@ -14,11 +14,11 @@ sast:
 include:
   - template: Security/SAST.gitlab-ci.yml
 
-build-image:
+docker:
   stage: build
   image: maven:3.9-eclipse-temurin-21
   script:
-    - mvn -B -DskipTests jib:build
+    - mvn compile -B -DskipTests jib:build
   variables:
     CI_REGISTRY: $CI_REGISTRY
     CI_REGISTRY_IMAGE: $CI_REGISTRY_IMAGE
