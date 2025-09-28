@@ -6,8 +6,38 @@
 # Note that environment variables can be set in several places
 # See https://docs.gitlab.com/ee/ci/variables/#cicd-variable-precedence
 stages:
-- test
+  - test
+  - build
+
 sast:
   stage: test
 include:
-- template: Security/SAST.gitlab-ci.yml
+  - template: Security/SAST.gitlab-ci.yml
+
+docker:
+  stage: build
+  image: maven:3.9-eclipse-temurin-21
+  rules:
+    # run for branches and tags
+    - if: $CI_COMMIT_BRANCH
+    - if: $CI_COMMIT_TAG
+  script:
+    # decide tags: commit sha always; add 'latest' on default branch; add tag name on releases
+    - |
+      TAGS="$CI_COMMIT_SHA"
+      if [ "$CI_COMMIT_BRANCH" = "$CI_DEFAULT_BRANCH" ]; then
+        TAGS="$TAGS,latest"
+      fi
+      if [ -n "$CI_COMMIT_TAG" ]; then
+        TAGS="$TAGS,$CI_COMMIT_TAG"
+      fi
+
+      echo "Pushing to: $CI_REGISTRY_IMAGE with tags: $TAGS"
+
+      # Build & push. Pass auth via system properties.
+      mvn compile -B -DskipTests \
+        jib:build \
+        -Djib.to.image="$CI_REGISTRY_IMAGE" \
+        -Djib.to.tags="$TAGS" \
+        -Djib.to.auth.username="$CI_REGISTRY_USER" \
+        -Djib.to.auth.password="$CI_REGISTRY_PASSWORD"

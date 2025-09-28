@@ -1,4 +1,4 @@
-package ch.hslu.devops.g01.backend.controller;
+package ch.hslu.devops.g01;
 
 import io.micronaut.http.annotation.*;
 
@@ -7,6 +7,6 @@ public class IndexController {
 
     @Get(uri="/", produces="text/plain")
     public String index() {
-        return "Index Route";
+        return "Example Response";
     }
 }
