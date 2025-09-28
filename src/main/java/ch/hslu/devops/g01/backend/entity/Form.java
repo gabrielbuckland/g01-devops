@@ -1,4 +1,4 @@
-package ch.hslu.devops.g01.backend.controller.entity;
+package ch.hslu.devops.g01.backend.entity;
 
 import io.micronaut.data.annotation.AutoPopulated;
 import io.micronaut.data.annotation.Id;
