@@ -1,6 +1,6 @@
-package ch.hslu.devops.g01.backend.controller.repository;
+package ch.hslu.devops.g01.backend.repository;
 
-import ch.hslu.devops.g01.backend.controller.entity.Form;
+import ch.hslu.devops.g01.backend.entity.Form;
 
 import io.micronaut.data.annotation.Repository;
 import io.micronaut.data.jdbc.annotation.JdbcRepository;
