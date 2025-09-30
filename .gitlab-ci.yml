@@ -55,3 +55,4 @@ deploy-to-test:
     - docker version
     - docker compose version
     - docker compose -f docker_local.yml up -d
+    - docker pull cr.gitlab.switch.ch/hslu/edu/bachelor-computer-science/devops/25hs01/g01/g01-form:latest
