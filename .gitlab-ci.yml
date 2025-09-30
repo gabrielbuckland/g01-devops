@@ -47,7 +47,7 @@ docker:
 
 deploy-to-test:
   stage: deploy
-  tags: test-env-runner
+  tags: ['test-env-runner']
   rules:
     - !reference [ .test_deployment_rules, rules ]
   script:
