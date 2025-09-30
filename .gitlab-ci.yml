@@ -47,8 +47,10 @@ docker:
 
 deploy-to-test:
   stage: deploy
-  tags: ['test-env-runner']
+  tags: ['deploy-test-docker']
   rules:
     - !reference [ .test_deployment_rules, rules ]
+  image: docker:27.1-cli
   script:
-    - echo "Deploy stage (could start docker image here)"
+    - docker version
+    - docker compose version
