@@ -8,11 +8,13 @@
 stages:
   - test
   - build
+  - deploy
 
 sast:
   stage: test
 include:
   - template: Security/SAST.gitlab-ci.yml
+  - local: gitlab/utils.yml
 
 docker:
   stage: build
@@ -41,3 +43,14 @@ docker:
         -Djib.to.tags="$TAGS" \
         -Djib.to.auth.username="$CI_REGISTRY_USER" \
         -Djib.to.auth.password="$CI_REGISTRY_PASSWORD"
+
+
+deploy-to-test:
+  stage: deploy
+  tags: ['deploy-test-docker']
+  rules:
+    - !reference [ .test_deployment_rules, rules ]
+  image: docker:27.1-cli
+  script:
+    - docker version
+    - docker compose version
