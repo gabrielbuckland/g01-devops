@@ -28,6 +28,7 @@ sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
 
 sudo apt update
 sudo apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+sudo systemctl enable --now docker
 
 docker --version
 docker compose version
@@ -43,7 +44,7 @@ newgrp docker
 4. lock the runner to the project
 5. create runner
 6. select Linux as OS
-7. Copy step 1 into a clipboard
+7. Copy step the token into a clipboard
 ### Setup runner 
 ``` bash
 sudo curl -L --output /usr/local/bin/gitlab-runner \
@@ -54,13 +55,32 @@ sudo chmod +x /usr/local/bin/gitlab-runner
 sudo useradd --comment 'GitLab Runner' --create-home gitlab-runner --shell /bin/bash
 
 sudo gitlab-runner install --user=gitlab-runner --working-directory=/home/gitlab-runner
+sudo systemctl enable --now gitlab-runner
 
-sudo gitlab-runner start
-
-> paste the copied stuff from the previous step
-> select shell when asked
-> done!
+sudo gitlab-runner register \
+  --url "https://gitlab.switch.ch/" \
+  --registration-token "<PROJECT_TOKEN>" \
+  --executor "docker" \
+  --docker-image "docker:28.4.0-cli" \
+  --docker-privileged
 ```
 
+Then add in /etc/gitlab-runner-config.toml
+``` toml
+# at top if missing:
+concurrent = 2
+request_concurrency = 2
 
+[[runners]]
+  executor = "docker"
+  [runners.docker]
+    pull_policy = "if-not-present"
+    volumes = ["/var/run/docker.sock:/var/run/docker.sock", "/cache"]
+```
+
+Then run -> it should show the runners
+``` bash
+sudo gitlab-runner list
+sudo systemctl status gitlab-runner --no-pager
+```
 
