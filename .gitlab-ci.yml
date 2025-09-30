@@ -54,3 +54,4 @@ deploy-to-test:
   script:
     - docker version
     - docker compose version
+    - docker compose -f docker_local.yml up -d
