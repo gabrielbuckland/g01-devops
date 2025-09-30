@@ -8,6 +8,7 @@
 stages:
   - test
   - build
+  - deploy
 
 sast:
   stage: test
@@ -41,3 +42,12 @@ docker:
         -Djib.to.tags="$TAGS" \
         -Djib.to.auth.username="$CI_REGISTRY_USER" \
         -Djib.to.auth.password="$CI_REGISTRY_PASSWORD"
+
+
+deploy-to-test:
+  stage: deploy
+  tags: test-env-runner
+  rules:
+    - !reference [ .test_deployment_rules, rules ]
+  script:
+    - echo "Deploy stage (could start docker image here)"
