@@ -123,3 +123,23 @@ services:
 ----
 
 
+=== 4. Create `.env` File
+
+Create a `.env` file to store environment variables for the Docker Compose setup.
+
+[source,bash]
+----
+# Postgres
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=postgres
+POSTGRES_DB=postgres
+JDBC_URL=jdbc:postgresql://postgres:5432/${POSTGRES_DB}
+----
+
+IMPORTANT: replace the values with secure credentials.
+
+
+
+
+
+
