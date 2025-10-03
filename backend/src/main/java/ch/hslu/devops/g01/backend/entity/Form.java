@@ -1,6 +1,7 @@
 package ch.hslu.devops.g01.backend.entity;
 
 import io.micronaut.data.annotation.AutoPopulated;
+import io.micronaut.data.annotation.GeneratedValue;
 import io.micronaut.data.annotation.Id;
 import io.micronaut.data.annotation.MappedEntity;
 
@@ -10,7 +11,7 @@ import java.util.UUID;
 public class Form {
 
     @Id
-    @AutoPopulated
+    @GeneratedValue
     private UUID id;
     private String vorname;
     private String nachname;
@@ -27,6 +28,8 @@ public class Form {
     public UUID getId(){
         return id;
     }
+
+    public void setId(UUID id) { this.id = id; }
 
     public String getVorname(){
         return vorname;
