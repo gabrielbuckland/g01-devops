@@ -35,12 +35,12 @@ docker:
         TAGS="$TAGS,$CI_COMMIT_TAG"
       fi
 
-      echo "Pushing to: $CI_REGISTRY_IMAGE with tags: $TAGS"
+      echo "Pushing to: $CI_REGISTRY_IMAGE-backend with tags: $TAGS"
 
       # Build & push. Pass auth via system properties.
       mvn compile -B -DskipTests \
         jib:build \
-        -Djib.to.image="$CI_REGISTRY_IMAGE" \
+        -Djib.to.image="$CI_REGISTRY_IMAGE-backend" \
         -Djib.to.tags="$TAGS" \
         -Djib.to.auth.username="$CI_REGISTRY_USER" \
         -Djib.to.auth.password="$CI_REGISTRY_PASSWORD"
