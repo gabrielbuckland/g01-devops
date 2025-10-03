@@ -80,6 +80,7 @@ request_concurrency = 2
 
 Then run -> it should show the runners
 ``` bash
+sudo systemctl restart gitlab-runner
 sudo gitlab-runner list
 sudo systemctl status gitlab-runner --no-pager
 ```
