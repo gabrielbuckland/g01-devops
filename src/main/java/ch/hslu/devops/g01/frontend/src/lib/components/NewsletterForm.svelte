@@ -25,7 +25,15 @@
 			// Dummy: Netzwerkdelay simulieren
 			await new Promise((resolve) => setTimeout(resolve, 1200));
 
-			if (!email.includes('@')) {
+			if (!vorname) {
+				throw new Error('Bitte deinen Vornamen eingeben.');
+			}
+
+			if (!nachname) {
+				throw new Error('Bitte deinen Nachnamen eingeben.');
+			}
+
+			if (!isEmail(email)) {
 				throw new Error('Bitte eine gültige E-Mail-Adresse eingeben.');
 			}
 
@@ -39,6 +47,11 @@
 			status = 'error';
 			message = err.message || 'Etwas ist schiefgelaufen. Bitte nochmals versuchen.';
 		}
+	}
+
+	function isEmail(email: string) {
+		const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+		return re.test(email.toLowerCase());
 	}
 </script>
 
