@@ -26,6 +26,7 @@ docker:
   script:
     # decide tags: commit sha always; add 'latest' on default branch; add tag name on releases
     - |
+      cd backend
       TAGS="$CI_COMMIT_SHA"
       if [ "$CI_COMMIT_BRANCH" = "$CI_DEFAULT_BRANCH" ]; then
         TAGS="$TAGS,latest"
