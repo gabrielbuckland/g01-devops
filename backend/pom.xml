@@ -3,7 +3,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>ch.hslu.devops.g01</groupId>
-  <artifactId>g01-form</artifactId>
+  <artifactId>backend</artifactId>
   <version>0.1</version>
   <packaging>${packaging}</packaging>
 
@@ -11,7 +11,10 @@
     <groupId>io.micronaut.platform</groupId>
     <artifactId>micronaut-parent</artifactId>
     <version>4.9.3</version>
+    <relativePath/> <!-- wichtig: verhindert Suche im ../pom.xml -->
   </parent>
+
+
   <properties>
     <packaging>jar</packaging>
     <jdk.version>21</jdk.version>
