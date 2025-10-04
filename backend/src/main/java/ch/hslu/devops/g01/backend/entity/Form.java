@@ -3,14 +3,20 @@ package ch.hslu.devops.g01.backend.entity;
 import io.micronaut.data.annotation.Id;
 import io.micronaut.data.annotation.MappedEntity;
 import io.micronaut.serde.annotation.Serdeable;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Email;
 
 @Serdeable
 @MappedEntity("form_db")
 public class Form {
 
     @Id
+    @NotBlank(message = "E-Mail can not be empty!")
+    @Email(message = "E-Mail is not valid!")
     private String email;
+    @NotBlank(message = "Name can not be empty!")
     private String vorname;
+    @NotBlank(message = "Surname can not be empty!")
     private String nachname;
 
 

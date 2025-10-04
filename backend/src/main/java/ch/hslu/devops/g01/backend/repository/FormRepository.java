@@ -7,11 +7,9 @@ import io.micronaut.data.jdbc.annotation.JdbcRepository;
 import io.micronaut.data.model.query.builder.sql.Dialect;
 import io.micronaut.data.repository.CrudRepository;
 
-import java.util.UUID;
-
 
 @Repository
 @JdbcRepository(dialect = Dialect.POSTGRES)
-public interface FormRepository extends CrudRepository<Form, UUID> {
+public interface FormRepository extends CrudRepository<Form, String> {
 
 }

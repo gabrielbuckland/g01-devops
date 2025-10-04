@@ -4,10 +4,14 @@ import ch.hslu.devops.g01.backend.entity.Form;
 import ch.hslu.devops.g01.backend.repository.FormRepository;
 import io.micronaut.http.HttpResponse;
 import io.micronaut.http.annotation.*;
+import io.micronaut.validation.Validated;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Email;
 
 import java.util.List;
 import java.util.UUID;
 
+@Validated
 @Controller("/form")
 public class FormController {
 
@@ -23,23 +27,23 @@ public class FormController {
     }
 
     @Post("/")
-    public HttpResponse<Form> create(@Body Form form){
+    public HttpResponse<Form> create(@Valid @Body Form form){
         var saved = repository.save(form);
         return HttpResponse.created(saved);
     }
 
-    @Delete("delete/{id}")
-    public HttpResponse<?> delete(UUID id){
-        if (repository.existsById(id)){
-            repository.deleteById(id);
+    @Delete("delete/{email}")
+    public HttpResponse<?> delete(@Email @PathVariable String email){
+        if (repository.existsById(email)){
+            repository.deleteById(email);
             return HttpResponse.noContent();
         }
         return HttpResponse.notFound();
     }
 
-    @Get("/get/{id}")
-    public HttpResponse<Form> getById(UUID id){
-        return repository.findById(id)
+    @Get("/get/{email}")
+    public HttpResponse<Form> getById(@Email @PathVariable String email){
+        return repository.findById(email)
                 .map(HttpResponse::ok)
                 .orElse(HttpResponse.notFound());
     }
