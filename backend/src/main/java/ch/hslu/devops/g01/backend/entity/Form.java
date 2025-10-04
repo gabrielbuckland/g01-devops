@@ -1,12 +1,13 @@
 package ch.hslu.devops.g01.backend.entity;
 
-import io.micronaut.data.annotation.AutoPopulated;
 import io.micronaut.data.annotation.GeneratedValue;
 import io.micronaut.data.annotation.Id;
 import io.micronaut.data.annotation.MappedEntity;
+import io.micronaut.serde.annotation.Serdeable;
 
 import java.util.UUID;
 
+@Serdeable
 @MappedEntity("form_db")
 public class Form {
 
