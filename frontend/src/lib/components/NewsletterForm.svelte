@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { PUBLIC_BACKEND_API_URL } from '$env/static/public';
+
 	import { Input } from '$lib/components/ui/input';
 	import { Button } from '$lib/components/ui/button';
 	import {
@@ -21,20 +23,34 @@
 		status = 'loading';
 		message = '';
 
-		try {
-			// Dummy: Netzwerkdelay simulieren
-			await new Promise((resolve) => setTimeout(resolve, 1200));
+		const backendUrl = PUBLIC_BACKEND_API_URL + '/form';
 
+		try {
 			if (!vorname) {
 				throw new Error('Bitte deinen Vornamen eingeben.');
 			}
-
 			if (!nachname) {
 				throw new Error('Bitte deinen Nachnamen eingeben.');
 			}
-
 			if (!isEmail(email)) {
 				throw new Error('Bitte eine gültige E-Mail-Adresse eingeben.');
+			}
+
+			const response = await fetch(backendUrl, {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({
+					vorname,
+					nachname,
+					email
+				})
+			});
+
+			if (!response.ok) {
+				const errorData = await response.json();
+				throw new Error(errorData.message || `Ein Fehler ist aufgetreten: ${response.statusText}`);
 			}
 
 			status = 'success';
