@@ -19,5 +19,15 @@ services:
       timeout: 5s
       retries: 5
 
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        - PUBLIC_BACKEND_API_URL=http://localhost:8080
+    container_name: g01-form-frontend
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+
 volumes:
   postgres_data:
