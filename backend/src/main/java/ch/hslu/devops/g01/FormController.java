@@ -1,5 +1,6 @@
 package ch.hslu.devops.g01;
 
+import ch.hslu.devops.g01.backend.dto.CreateFormRequest;
 import ch.hslu.devops.g01.backend.entity.Form;
 import ch.hslu.devops.g01.backend.repository.FormRepository;
 import io.micronaut.http.HttpResponse;
@@ -27,11 +28,12 @@ public class FormController {
     }
 
     @Post("/")
-    public HttpResponse<Form> create(@Valid @Body Form form){
-        if(repository.existsById(form.getEmail())){
+    public HttpResponse<Form> create(@Valid @Body CreateFormRequest req){
+        if(repository.existsById(req.email())){
             throw new HttpStatusException(HttpStatus.CONFLICT, "Email already exists!");
         }
-        var saved = repository.save(form);
+        var email = req.email().trim().toLowerCase();
+        var saved = repository.save(new Form(email, req.vorname(), req.nachname()));
         return HttpResponse.created(saved);
     }
 
