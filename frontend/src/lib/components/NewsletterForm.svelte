@@ -116,7 +116,10 @@
 			</Button>
 
 			{#if message}
-				<p class={status === 'error' ? 'text-sm text-red-400' : 'text-sm text-green-400'}>
+				<p
+					data-testid="status-message"
+					class={status === 'error' ? 'text-sm text-red-400' : 'text-sm text-green-400'}
+				>
 					{message}
 				</p>
 			{/if}
