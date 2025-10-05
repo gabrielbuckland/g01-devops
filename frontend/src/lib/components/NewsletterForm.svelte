@@ -1,6 +1,4 @@
 <script lang="ts">
-	import { PUBLIC_BACKEND_API_URL } from '$env/static/public';
-
 	import { Input } from '$lib/components/ui/input';
 	import { Button } from '$lib/components/ui/button';
 	import {
@@ -11,6 +9,9 @@
 		CardContent,
 		CardFooter
 	} from '$lib/components/ui/card';
+	import { Validator } from '$lib/validator';
+	import { formMessages } from '$lib/constants';
+	import { FormService } from '$lib/services/form.service';
 
 	let vorname = '';
 	let nachname = '';
@@ -23,29 +24,24 @@
 		status = 'loading';
 		message = '';
 
-		const backendUrl = PUBLIC_BACKEND_API_URL + '/form';
-
 		try {
-			if (!vorname) {
-				throw new Error('Bitte deinen Vornamen eingeben.');
+			if (Validator.isEmpty(vorname)) {
+				throw new Error(formMessages.ERROR_FIRSTNAME_REQUIRED);
 			}
-			if (!nachname) {
-				throw new Error('Bitte deinen Nachnamen eingeben.');
+			if (Validator.isEmpty(nachname)) {
+				throw new Error(formMessages.ERROR_LASTNAME_REQUIRED);
 			}
-			if (!isEmail(email)) {
-				throw new Error('Bitte eine gültige E-Mail-Adresse eingeben.');
+			if (Validator.isEmpty(email)) {
+				throw new Error(formMessages.ERROR_EMAIL_REQUIRED);
+			}
+			if (!Validator.isEmail(email)) {
+				throw new Error(formMessages.ERROR_EMAIL_INVALID);
 			}
 
-			const response = await fetch(backendUrl, {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json'
-				},
-				body: JSON.stringify({
-					vorname,
-					nachname,
-					email
-				})
+			const response = await FormService.submitForm({
+				vorname,
+				nachname,
+				email
 			});
 
 			if (!response.ok) {
@@ -54,20 +50,15 @@
 			}
 
 			status = 'success';
-			message = `Vielen Dank für deine Anmeldung, ${vorname}!`;
+			message = formMessages.SUCCESS(vorname);
 
 			vorname = '';
 			nachname = '';
 			email = '';
 		} catch (err: any) {
 			status = 'error';
-			message = err.message || 'Etwas ist schiefgelaufen. Bitte nochmals versuchen.';
+			message = err.message || formMessages.ERROR_GENERIC;
 		}
-	}
-
-	function isEmail(email: string) {
-		const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-		return re.test(email.toLowerCase());
 	}
 </script>
 
