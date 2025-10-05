@@ -72,7 +72,7 @@ mvn test
 
 1. Wechsel in das Frontend-Verzeichnis:
    ```bash
-   cd src/main/java/ch/hslu/devops/g01/frontend
+   cd frontend
 
    ```
 2. Install dependencies
