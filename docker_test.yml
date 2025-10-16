@@ -27,7 +27,7 @@ services:
       postgres:
         condition: service_healthy
     environment:
-      DATASOURCES_DEFAULT_URL: jdbc:postgresql://postgres:5432/postgres
+      DATASOURCES_DEFAULT_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}
       DATASOURCES_DEFAULT_USERNAME: ${POSTGRES_USER}
       DATASOURCES_DEFAULT_PASSWORD: ${POSTGRES_PASSWORD}
       MICRONAUT_ENVIRONMENTS: test

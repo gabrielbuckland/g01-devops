@@ -86,9 +86,9 @@ deploy-to-test:
     - rm -f .env.test
     - |
         cat > .env.test <<EOF
-        POSTGRES_USER=${TEST_POSTGRES_USER:-postgres}
-        POSTGRES_PASSWORD=${TEST_POSTGRES_PW:-postgres}
-        POSTGRES_DB=${TEST_POSTGRES_DB:-postgres}
+        POSTGRES_USER=${TEST_POSTGRES_USER}
+        POSTGRES_PASSWORD=${TEST_POSTGRES_PW}
+        POSTGRES_DB=${TEST_POSTGRES_DB}
         EOF
     - docker compose --env-file .env.test -f docker_test.yml down --remove-orphans --timeout 60 || true
     - docker compose --env-file .env.test -f docker_test.yml pull
