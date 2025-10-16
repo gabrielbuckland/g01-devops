@@ -1,19 +1,24 @@
-# VM Setup
+= VM Setup
 
-### 1. Update Debian
-``` bash
+== 1. Update Debian
+
+[source,bash]
+----
 sudo apt update && sudo apt upgrade -y
 sudo apt install -y git curl ca-certificates gnupg lsb-release
-```
+----
 
-### 2. Install curl, git etc
-``` bash
+== 2. Install curl, git etc
 
+[source,bash]
+----
 sudo install -m 0755 -d /etc/apt/keyrings
-```
-### 3. Install Docker engine
+----
 
-``` bash
+== 3. Install Docker engine
+
+[source,bash]
+----
 curl -fsSL https://download.docker.com/linux/debian/gpg | \
 sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
 sudo chmod a+r /etc/apt/keyrings/docker.gpg
@@ -23,7 +28,6 @@ echo \
 signed-by=/etc/apt/keyrings/docker.gpg] \
 https://download.docker.com/linux/debian \
 $(lsb_release -cs) stable" | \
-
 sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
 
 sudo apt update
@@ -35,25 +39,43 @@ docker compose version
 
 sudo usermod -aG docker $USER
 newgrp docker
-```
+----
 
-### Grab runner settings from Gitlab
-1. [Go to gitlab CI/CD settings](https://gitlab.switch.ch/hslu/edu/bachelor-computer-science/devops/25hs01/g01/g01-form/-/settings/ci_cd)
-2. Open Runners drawer -> Create project runner
-3. add tag e.g test-env-runner
-4. lock the runner to the project
-5. create runner
-6. select Linux as OS
-7. Copy step the token into a clipboard
-### Setup runner 
-``` bash
+add user to docker group
+[source,bash]
+----
+
+sudo usermod -aG docker $USER
+newgrp docker
+----
+
+== Grab runner settings from GitLab
+
+. Go to https://gitlab.switch.ch/hslu/edu/bachelor-computer-science/devops/25hs01/g01/g01-form/-/settings/ci_cd[GitLab CI/CD settings]
+. Open *Runners* drawer → *Create project runner*
+. Add tag, e.g. `test-env-runner`
+. Lock the runner to the project
+. Create runner
+. Select *Linux* as OS
+. Copy the token into clipboard
+
+== Setup runner
+
+[source,bash]
+----
 sudo curl -L --output /usr/local/bin/gitlab-runner \
 https://gitlab-runner-downloads.s3.amazonaws.com/latest/binaries/gitlab-runner-linux-amd64
-
+----
+[source,bash]
+----
 sudo chmod +x /usr/local/bin/gitlab-runner
-
+----
+[source,bash]
+----
 sudo useradd --comment 'GitLab Runner' --create-home gitlab-runner --shell /bin/bash
-
+----
+[source,bash]
+----
 sudo gitlab-runner install --user=gitlab-runner --working-directory=/home/gitlab-runner
 sudo systemctl enable --now gitlab-runner
 
@@ -63,10 +85,12 @@ sudo gitlab-runner register \
   --executor "docker" \
   --docker-image "docker:28.4.0-cli" \
   --docker-privileged
-```
+----
 
-Then add in /etc/gitlab-runner-config.toml
-``` toml
+Then add in `/etc/gitlab-runner-config.toml`:
+
+[source,toml]
+----
 # at top if missing:
 concurrent = 2
 request_concurrency = 2
@@ -76,12 +100,13 @@ request_concurrency = 2
   [runners.docker]
     pull_policy = "if-not-present"
     volumes = ["/var/run/docker.sock:/var/run/docker.sock", "/cache"]
-```
+----
 
-Then run -> it should show the runners
-``` bash
+Then run – it should show the runners:
+
+[source,bash]
+----
 sudo systemctl restart gitlab-runner
 sudo gitlab-runner list
 sudo systemctl status gitlab-runner --no-pager
-```
-
+----
