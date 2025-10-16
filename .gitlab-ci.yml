@@ -81,6 +81,9 @@ deploy-to-test:
   rules:
     - !reference [ .test_deployment_rules, rules ]
   image: docker:28.4.0-cli
+  environment:
+    name: test
+    url: http://srv-020.devops.ls.eee.intern/
   script:
     - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
     - rm -f .env.test
