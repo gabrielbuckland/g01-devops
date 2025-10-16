@@ -6,8 +6,8 @@
 # Note that environment variables can be set in several places
 # See https://docs.gitlab.com/ee/ci/variables/#cicd-variable-precedence
 stages:
-  - test
   - build
+  - test
   - deploy
 
 sast:
@@ -82,10 +82,15 @@ deploy-to-test:
     - !reference [ .test_deployment_rules, rules ]
   image: docker:28.4.0-cli
   script:
-    - docker version
-    - docker compose version
-    - docker compose -f docker_local.yml up -d
     - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
-    - docker pull $CI_REGISTRY_IMAGE/backend:latest
-    - docker pull $CI_REGISTRY_IMAGE/frontend:latest
+    - rm -f .env.test
+    - |
+        cat > .env.test <<EOF
+        POSTGRES_USER=${TEST_POSTGRES_USER:-postgres}
+        POSTGRES_PASSWORD=${TEST_POSTGRES_PW:-postgres}
+        POSTGRES_DB=${TEST_POSTGRES_DB:-postgres}
+        EOF
+    - docker compose --env-file .env.test -f docker_test.yml down --remove-orphans --timeout 60 || true
+    - docker compose --env-file .env.test -f docker_test.yml pull
+    - docker compose --env-file .env.test -f docker_test.yml up -d --wait --wait-timeout 180
     - docker logout

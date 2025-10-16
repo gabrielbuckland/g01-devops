@@ -1,5 +1,3 @@
-version: "3.8"
-
 volumes:
   postgres_data:
 
@@ -14,7 +12,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      test: [ "CMD-SHELL", "PGPASSWORD=$$POSTGRES_PASSWORD pg_isready -h localhost -p 5432 -U $$POSTGRES_USER -d $$POSTGRES_DB || exit 1" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -27,30 +25,44 @@ services:
       postgres:
         condition: service_healthy
     environment:
-      JDBC_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}
-      DB_USER: ${POSTGRES_USER}
-      DB_PASS: ${POSTGRES_PASSWORD}
-      MICRONAUT_ENVIRONMENTS: prod
+      DATASOURCES_DEFAULT_URL: jdbc:postgresql://postgres:5432/postgres
+      DATASOURCES_DEFAULT_USERNAME: ${POSTGRES_USER}
+      DATASOURCES_DEFAULT_PASSWORD: ${POSTGRES_PASSWORD}
+      MICRONAUT_ENVIRONMENTS: test
       JAVA_OPTS: ${JAVA_OPTS:-"-XX:+ExitOnOutOfMemoryError -XX:MaxRAMPercentage=75"}
-    ports:
-      - "8080:8080"
     healthcheck:
-      test: ["CMD-SHELL", "curl -fsS http://localhost:8080/health || exit 1"]
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8080/api || exit 1"]
       interval: 15s
       timeout: 5s
       retries: 10
       start_period: 30s
     read_only: true
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.api.entrypoints=web"
+      - "traefik.http.routers.api.rule=PathPrefix(`/api`)"
+      - "traefik.http.routers.api.priority=100"
+      - "traefik.http.services.api.loadbalancer.server.port=8080"
     tmpfs:
       - /tmp
-
   frontend:
     image: cr.gitlab.switch.ch/hslu/edu/bachelor-computer-science/devops/25hs01/g01/g01-form/frontend:latest
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.front.entrypoints=web"
+      - "traefik.http.routers.front.rule=PathPrefix(`/`)"
+      - "traefik.http.routers.front.priority=1"
+      - "traefik.http.services.front.loadbalancer.server.port=3000"
     restart: unless-stopped
-    depends_on:
-      postgres:
-        condition: service_healthy
-    environment:
-      PUBLIC_BACKEND_API_URL: http://localhost:8080
+
+
+  traefik:
+    image: traefik:v2.11
+    command:
+      - "--providers.docker=true"
+      - "--entrypoints.web.address=:80"
     ports:
-      - "3000:3000"
+      - "80:80"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+    restart: unless-stopped
