@@ -44,10 +44,10 @@ Dokumentation der Gruppe g01 im Modul DEVOPS HS25.
 
 ## VMs
 
-| VM owner | hostname                     | username |
-|----------|------------------------------|----------|
-| lukas    | srv-021.devops.ls.eee.intern | labadmin |
-| gabriel  | srv-003.devops.ls.eee.intern | labadmin |
-| bleron   | srv-012.devops.ls.eee.intern | labadmin |
-| nevi     | srv-020.devops.ls.eee.intern | labadmin |
+| VM owner | hostname                     | username | usage    |
+|----------|------------------------------|----------|----------|
+| gabriel  | srv-003.devops.ls.eee.intern | labadmin |          |
+| bleron   | srv-012.devops.ls.eee.intern | labadmin |          |
+| nevi     | srv-020.devops.ls.eee.intern | labadmin | TEST env |
+| lukas    | srv-021.devops.ls.eee.intern | labadmin | PROD env |
 
