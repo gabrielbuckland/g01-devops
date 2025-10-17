@@ -35,7 +35,9 @@ MICRONAUT_ENVIRONMENTS=local java -jar ./target/g01-form-0.1.jar
 
 ---
 
-## Production
+## Starting everything inside docker just like on the VMs
+This setup also boots up traefik that manages the traffic to the frontend and backend and simplifies the networking
+### Test
 
 1. Copy the environment template and configure secrets:
 
@@ -43,7 +45,23 @@ MICRONAUT_ENVIRONMENTS=local java -jar ./target/g01-form-0.1.jar
 cp .env.example .env
 ```
 
-2. Start the application and database using the production compose file:
+1. Start the application and database using the test compose file:
+
+```bash
+docker compose -f docker_test.yml up -d
+# docker compose should automatically inject variables from the .env file
+# if not, add the `--env-file .env` option
+```
+
+### Production
+
+1. Copy the environment template and configure secrets:
+
+```bash
+cp .env.example .env
+```
+
+1. Start the application and database using the production compose file:
 
 ```bash
 docker compose -f docker_prod.yml up -d
@@ -51,7 +69,8 @@ docker compose -f docker_prod.yml up -d
 # if not, add the `--env-file .env` option
 ```
 
-3. Access the application under [http://localhost:8080](http://localhost:8080). Or the corresponding server IP/domain.
+1. Access the application under [http://localhost](http://localhost). Or the corresponding server IP/domain.
+
 
 ---
 

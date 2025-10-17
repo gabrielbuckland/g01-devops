@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   postgres:
     image: postgres:16
@@ -18,14 +16,6 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-
-  frontend:
-    build:
-      context: ./frontend
-    container_name: g01-form-frontend
-    ports:
-      - "80:3000"
-    restart: unless-stopped
 
 volumes:
   postgres_data:
