@@ -1,0 +1,12 @@
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  # This job scrapes the Prometheus server itself
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  - job_name: 'local-postgres'
+    static_configs:
+      - targets: ['localhost:9187']
