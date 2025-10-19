@@ -7,6 +7,7 @@ scrape_configs:
     static_configs:
       - targets: ['localhost:9090']
 
+  # Data from prometheus-exporter on local machine in g01-form project
   - job_name: 'local-postgres'
     static_configs:
-      - targets: ['localhost:9187']
+      - targets: ['host.docker.internal:9187']
