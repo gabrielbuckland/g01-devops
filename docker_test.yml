@@ -53,12 +53,6 @@ services:
     image: cr.gitlab.switch.ch/hslu/edu/bachelor-computer-science/devops/25hs01/g01/g01-form/frontend:${IMAGE_TAG}
     pull_policy: always
     restart: unless-stopped
-    healthcheck:
-      test: ["CMD-SHELL", "curl -fsS http://localhost:3000/ || exit 1"]
-      interval: 20s
-      timeout: 5s
-      retries: 10
-      start_period: 30s
     read_only: true
     tmpfs:
       - /tmp
