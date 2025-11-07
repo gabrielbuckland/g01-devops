@@ -1,10 +1,14 @@
-# You can override the included template(s) by including variable overrides
-# SAST customization: https://docs.gitlab.com/ee/user/application_security/sast/#customizing-the-sast-settings
-# Secret Detection customization: https://docs.gitlab.com/user/application_security/secret_detection/pipeline/configure
-# Dependency Scanning customization: https://docs.gitlab.com/ee/user/application_security/dependency_scanning/#customizing-the-dependency-scanning-settings
-# Container Scanning customization: https://docs.gitlab.com/ee/user/application_security/container_scanning/#customizing-the-container-scanning-settings
-# Note that environment variables can be set in several places
-# See https://docs.gitlab.com/ee/ci/variables/#cicd-variable-precedence
+include:
+  - template: Security/SAST.gitlab-ci.yml
+  - local: gitlab/utils.yml
+
+# Never create pipelines for tags (branch-only pipelines)
+workflow:
+  rules:
+    - if: $CI_COMMIT_TAG
+      when: never
+    - when: always
+
 stages:
   - build
   - test
@@ -12,69 +16,41 @@ stages:
 
 sast:
   stage: test
-include:
-  - template: Security/SAST.gitlab-ci.yml
-  - local: gitlab/utils.yml
 
+# ---------- Build: backend (branches only, SHA tag) ----------
 backend:
   stage: build
   image: maven:3.9-eclipse-temurin-21
   rules:
-    # run for branches and tags
-    - if: $CI_COMMIT_BRANCH
-    - if: $CI_COMMIT_TAG
+    - if: $CI_COMMIT_BRANCH           # only branches
   script:
-    # decide tags: commit sha always; add 'latest' on default branch; add tag name on releases
+    - cd backend
+    - echo "Building and pushing backend image with tag: $CI_COMMIT_SHA"
     - |
-      cd backend
-      TAGS="$CI_COMMIT_SHA"
-      if [ "$CI_COMMIT_BRANCH" = "$CI_DEFAULT_BRANCH" ]; then
-        TAGS="$TAGS,latest"
-      fi
-      if [ -n "$CI_COMMIT_TAG" ]; then
-        TAGS="$TAGS,$CI_COMMIT_TAG"
-      fi
-
-      echo "Pushing to: $CI_REGISTRY_IMAGE/backend with tags: $TAGS"
-
-      # Build & push. Pass auth via system properties.
-      mvn compile -B -DskipTests \
-        jib:build \
+      mvn -B -DskipTests \
+        compile jib:build \
         -Djib.to.image="$CI_REGISTRY_IMAGE/backend" \
-        -Djib.to.tags="$TAGS" \
+        -Djib.to.tags="$CI_COMMIT_SHA" \
         -Djib.to.auth.username="$CI_REGISTRY_USER" \
         -Djib.to.auth.password="$CI_REGISTRY_PASSWORD"
 
+# ---------- Build: frontend (branches only, SHA tag) ----------
 frontend:
   stage: build
   image: docker:28.4.0-cli
   services:
     - docker:dind
   rules:
-    # run for branches and tags
-    - if: $CI_COMMIT_BRANCH
-    - if: $CI_COMMIT_TAG
+    - if: $CI_COMMIT_BRANCH           # only branches
   script:
-    - |
-      cd frontend
-      TAGS="$CI_COMMIT_SHA"
-      if [ "$CI_COMMIT_BRANCH" = "$CI_DEFAULT_BRANCH" ]; then
-        TAGS="$TAGS,latest"
-      fi
-      if [ -n "$CI_COMMIT_TAG" ]; then
-        TAGS="$TAGS,$CI_COMMIT_TAG"
-      fi
-      
-      echo "Logging in to GitLab Container Registry"
-      echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
+    - cd frontend
+    - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
+    - echo "Building and pushing frontend image with tag: $CI_COMMIT_SHA"
+    - docker build -t "$CI_REGISTRY_IMAGE/frontend:$CI_COMMIT_SHA" .
+    - docker push "$CI_REGISTRY_IMAGE/frontend:$CI_COMMIT_SHA"
+    - docker logout || true
 
-      echo "Building and pushing to: $CI_REGISTRY_IMAGE/frontend with tags: $TAGS"
-      docker build -t "$CI_REGISTRY_IMAGE/frontend:$CI_COMMIT_SHA" .
-      docker tag "$CI_REGISTRY_IMAGE/frontend:$CI_COMMIT_SHA" "$CI_REGISTRY_IMAGE/frontend:latest"
-      docker push --all-tags "$CI_REGISTRY_IMAGE/frontend"
-      
-      docker logout
-
+# ---------- Deploy: test (uses your utils.yml rules) ----------
 deploy-to-test:
   stage: deploy
   tags: ['deploy-test-docker']
@@ -88,15 +64,18 @@ deploy-to-test:
     - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
     - rm -f .env.test
     - |
-        cat > .env.test <<EOF
-        POSTGRES_USER=${TEST_POSTGRES_USER}
-        POSTGRES_PASSWORD=${TEST_POSTGRES_PW}
-        POSTGRES_DB=${TEST_POSTGRES_DB}
-        EOF
+      cat > .env.test <<EOF
+      POSTGRES_USER=${TEST_POSTGRES_USER}
+      POSTGRES_PASSWORD=${TEST_POSTGRES_PW}
+      POSTGRES_DB=${TEST_POSTGRES_DB}
+      IMAGE_TAG=${CI_COMMIT_SHA}
+      EOF
     - docker compose --env-file .env.test -f docker_test.yml down --remove-orphans --timeout 60 || true
     - docker compose --env-file .env.test -f docker_test.yml pull
     - docker compose --env-file .env.test -f docker_test.yml up -d --wait --wait-timeout 180
-    - docker logout
+    - docker logout || true
+
+# ---------- Deploy: prod (uses your utils.yml rules) ----------
 deploy-to-prod:
   stage: deploy
   tags: ['deploy-prod-docker']
@@ -114,8 +93,9 @@ deploy-to-prod:
       POSTGRES_USER=${PROD_POSTGRES_USER}
       POSTGRES_PASSWORD=${PROD_POSTGRES_PW}
       POSTGRES_DB=${PROD_POSTGRES_DB}
+      IMAGE_TAG=${CI_COMMIT_SHA}
       EOF
     - docker compose --env-file .env.prod -f docker_prod.yml down --remove-orphans --timeout 60 || true
     - docker compose --env-file .env.prod -f docker_prod.yml pull
     - docker compose --env-file .env.prod -f docker_prod.yml up -d --wait --wait-timeout 180
-    - docker logout
+    - docker logout || true
