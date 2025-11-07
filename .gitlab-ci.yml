@@ -97,3 +97,25 @@ deploy-to-test:
     - docker compose --env-file .env.test -f docker_test.yml pull
     - docker compose --env-file .env.test -f docker_test.yml up -d --wait --wait-timeout 180
     - docker logout
+deploy-to-prod:
+  stage: deploy
+  tags: ['deploy-prod-docker']
+  rules:
+    - !reference [ .prod_deployment_rules, rules ]
+  image: docker:28.4.0-cli
+  environment:
+    name: prod
+    url: http://srv-021.devops.ls.eee.intern/
+  script:
+    - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
+    - rm -f .env.prod
+    - |
+      cat > .env.prod <<EOF
+      POSTGRES_USER=${PROD_POSTGRES_USER}
+      POSTGRES_PASSWORD=${PROD_POSTGRES_PW}
+      POSTGRES_DB=${PROD_POSTGRES_DB}
+      EOF
+    - docker compose --env-file .env.prod -f docker_prod.yml down --remove-orphans --timeout 60 || true
+    - docker compose --env-file .env.prod -f docker_prod.yml pull
+    - docker compose --env-file .env.prod -f docker_prod.yml up -d --wait --wait-timeout 180
+    - docker logout
