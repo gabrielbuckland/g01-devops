@@ -32,7 +32,6 @@ services:
       DATASOURCES_DEFAULT_USERNAME: ${POSTGRES_USER}
       DATASOURCES_DEFAULT_PASSWORD: ${POSTGRES_PASSWORD}
       MICRONAUT_ENVIRONMENTS: prod
-      COMMIT_SHA: ${IMAGE_TAG}
       JAVA_OPTS: ${JAVA_OPTS:-"-XX:+ExitOnOutOfMemoryError -XX:MaxRAMPercentage=75"}
     healthcheck:
       test: ["CMD-SHELL", "curl -fsS http://localhost:8080/api || exit 1"]
