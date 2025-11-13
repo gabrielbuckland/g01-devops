@@ -1,0 +1,14 @@
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  # Dieser Job scrapt den Prometheus-Server selbst
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # Dieser Job scrapt den Exporter auf deinem TEST-Server
+  - job_name: 'test-postgres'
+    static_configs:
+      # Ersetze dies mit dem Hostnamen oder der IP deiner Test-VM
+      - targets: ['srv-003.devops.ls.eee.intern:9187']
