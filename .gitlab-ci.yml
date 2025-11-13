@@ -1,4 +1,3 @@
-# Verhindert, dass Pipelines für Tags gestartet werden
 workflow:
   rules:
     - if: $CI_COMMIT_TAG
@@ -10,56 +9,46 @@ stages:
 
 deploy-monitoring-test:
   stage: deploy
-  image: docker:28.4.0-cli # Selbes Image wie in deiner anderen Pipeline
+  image: docker:28.4.0-cli
+  services:
+    - docker:dind
 
-  # WICHTIG:
-  # Du musst einen GitLab Runner auf deinem Monitoring-Server
-  # installieren und ihm DIESEN Tag geben.
-  # Es darf NICHT 'deploy-test-docker' sein, da dieser
-  # auf deinem App-Server (srv-020) läuft.
-  tags: ['deploy-monitoring-docker']
+  tags:
+    - deploy-monitoring-docker
 
   rules:
-    # Löst das Deployment bei jedem Push auf den 'main'-Branch aus
     - if: $CI_COMMIT_BRANCH == "main"
 
   environment:
     name: monitoring/test
-    # Ersetze dies mit der URL deines Monitoring-Servers
-    url: http://srv-003.devops.ls.eee.intern:3000
+    url: http://srv-003.devops.ls.eee.intern/grafana
 
   script:
-    - echo "Deploying Monitoring Stack (Test)..."
+    - echo "Login to GitLab Registry"
+    - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
 
-    # Verwendet das 'docker_test_monitoring.yml' File, das
-    # wir in der letzten Nachricht definiert haben.
-    - docker compose -f docker_test.yml down --remove-orphans --timeout 60 || true
+    - echo "Projektstruktur anzeigen"
+    - ls -R .
+
+    - echo "Prometheus-Verzeichnis anzeigen"
+    - ls -R ./prometheus || true
+
+    - echo "Docker Compose config check"
+    - docker compose -f docker_test.yml config
+
+    - echo "Stopping old stack..."
+    - docker compose -f docker_test.yml down --remove-orphans || true
+
+    - echo "Pulling images..."
     - docker compose -f docker_test.yml pull
-    - docker compose -f docker_test.yml up -d --wait --wait-timeout 180
+
+    - echo "Starting new stack..."
+    - docker compose -f docker_test.yml up -d --force-recreate --remove-orphans
 
     - echo "Monitoring Stack (Test) deployed!"
-    - echo "Grafana UI: ${CI_ENVIRONMENT_URL}"
-    - echo "Prometheus UI: http://srv-003.devops.ls.eee.intern:9090"
 
-# --- Platzhalter für eine zukünftige Produktionsumgebung ---
-#
-# deploy-monitoring-prod:
-#   stage: deploy
-#   image: docker:28.4.0-cli
-#   services:
-#     - docker:dind
-#   tags: ['deploy-monitoring-prod-docker'] # Ein separater Tag für den Prod-Monitoring-Runner
-#   rules:
-#     - if: $CI_COMMIT_BRANCH == "prod" # Löst z.B. bei Merge auf 'prod'-Branch aus
-#       when: manual # Manuell starten zur Sicherheit
-#   environment:
-#     name: monitoring/prod
-#     url: http://<dein-prod-monitoring-server-hostname>:3000
-#   script:
-#     - echo "Deploying Monitoring Stack (Prod)..."
-#     # Hier würdest du eine 'docker_prod_monitoring.yml' verwenden,
-#     # die eine 'prometheus_prod.yml' lädt (welche dann
-#     # den Test- UND Prod-Exporter scraped).
-#     - docker compose -f docker_prod_monitoring.yml down --remove-orphans --timeout 60 || true
-#     - docker compose -f docker_prod_monitoring.yml pull
-#     - docker compose -f docker_prod_monitoring.yml up -d --wait --wait-timeout 180
+    - echo "Grafana UI:"
+    - echo "http://srv-003.devops.ls.eee.intern/grafana"
+
+    - echo "Prometheus UI:"
+    - echo "http://srv-003.devops.ls.eee.intern/prometheus"

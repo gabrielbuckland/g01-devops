@@ -9,6 +9,7 @@ scrape_configs:
 
   # Dieser Job scrapt den Exporter auf deinem TEST-Server
   - job_name: 'test-postgres'
+    metrics_path: /pg-exporter/metrics
     static_configs:
       # Ersetze dies mit dem Hostnamen oder der IP deiner Test-VM
-      - targets: ['srv-003.devops.ls.eee.intern:9187']
+      - targets: ['srv-020.devops.ls.eee.intern']
