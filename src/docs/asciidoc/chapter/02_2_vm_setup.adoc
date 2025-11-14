@@ -1,6 +1,6 @@
 == VM Setup
 
-=== 1. Update Debian
+=== 1. Debian aktualisieren
 
 [source,bash]
 ----
@@ -8,14 +8,14 @@ sudo apt update && sudo apt upgrade -y
 sudo apt install -y git curl ca-certificates gnupg lsb-release
 ----
 
-=== 2. Install curl, git etc
+=== 2. curl, git etc installieren
 
 [source,bash]
 ----
 sudo install -m 0755 -d /etc/apt/keyrings
 ----
 
-=== 3. Install Docker engine
+=== 3. Docker engine installieren
 
 [source,bash]
 ----
@@ -49,17 +49,17 @@ sudo usermod -aG docker $USER
 newgrp docker
 ----
 
-=== Grab runner settings from GitLab
+=== Gitlab-Runner einrichten auf dem Gitlab-UI
 
-. Go to https://gitlab.switch.ch/hslu/edu/bachelor-computer-science/devops/25hs01/g01/g01-form/-/settings/ci_cd[GitLab CI/CD settings]
-. Open *Runners* drawer → *Create project runner*
-. Add tag, e.g. `test-env-runner`
-. Lock the runner to the project
-. Create runner
-. Select *Linux* as OS
-. Copy the token into clipboard
+. Geh zu https://gitlab.switch.ch/hslu/edu/bachelor-computer-science/devops/25hs01/g01/g01-form/-/settings/ci_cd[GitLab CI/CD Einstellungen]
+. Öffne das *Runner* Menü → *Create project runner*
+. Erstelle einen tag, e.g. `test-env-runner`
+. Schränke den Runner auf das Projekt ein
+. Erstelle den Runner
+. Wähle *Linux* als das OS
+. Kopiere den token in das Clipboard
 
-=== Setup runner
+=== Runner aufsetzen
 
 [source,bash]
 ----
@@ -87,7 +87,7 @@ sudo gitlab-runner register \
   --docker-privileged
 ----
 
-Then add in `/etc/gitlab-runner-config.toml`:
+Als nächstes füge folgendes in der Runner-Config hinzu `/etc/gitlab-runner-config.toml`:
 
 [source,toml]
 ----
@@ -102,7 +102,7 @@ request_concurrency = 2
     volumes = ["/var/run/docker.sock:/var/run/docker.sock", "/cache"]
 ----
 
-Then run – it should show the runners:
+Nach der Konfig-Änderung muss der gitlab-runner neugestartet werden.
 
 [source,bash]
 ----
