@@ -20,8 +20,8 @@ Das Team besteht aus folgenden Personen:
 == Dokumentation
 Die Dokumentation ist mit https://asciidoc.org/[AsciiDoc] Format geschrieben und unter folgenden Links erreichbar:
 
-* link:./documentation.html[WEB]
-* link:./documentation.pdf[PDF]
+* link:./index.html[WEB]
+* link:./index.pdf[PDF]
 
 include::chapter/01_uebersicht.adoc[]
 
