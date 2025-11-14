@@ -1,6 +1,6 @@
-= VM Setup
+== VM Setup
 
-== 1. Update Debian
+=== 1. Update Debian
 
 [source,bash]
 ----
@@ -8,14 +8,14 @@ sudo apt update && sudo apt upgrade -y
 sudo apt install -y git curl ca-certificates gnupg lsb-release
 ----
 
-== 2. Install curl, git etc
+=== 2. Install curl, git etc
 
 [source,bash]
 ----
 sudo install -m 0755 -d /etc/apt/keyrings
 ----
 
-== 3. Install Docker engine
+=== 3. Install Docker engine
 
 [source,bash]
 ----
@@ -49,7 +49,7 @@ sudo usermod -aG docker $USER
 newgrp docker
 ----
 
-== Grab runner settings from GitLab
+=== Grab runner settings from GitLab
 
 . Go to https://gitlab.switch.ch/hslu/edu/bachelor-computer-science/devops/25hs01/g01/g01-form/-/settings/ci_cd[GitLab CI/CD settings]
 . Open *Runners* drawer → *Create project runner*
@@ -59,7 +59,7 @@ newgrp docker
 . Select *Linux* as OS
 . Copy the token into clipboard
 
-== Setup runner
+=== Setup runner
 
 [source,bash]
 ----

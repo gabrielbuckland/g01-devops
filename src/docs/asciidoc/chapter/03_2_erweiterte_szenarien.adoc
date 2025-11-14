@@ -1,0 +1,32 @@
+== Erweiterte Szenarien (Auswahl)
+
+Kurze Einleitung: Welche Szenarien wurden konkret umgesetzt und warum.
+
+=== Notfall-Bugfix in Produktion
+
+* Erkennung des Problems (Monitoring, Incident-Report)
+* Vorgehen fuer Hotfix (Branching, Tests, Freigaben)
+* Schnelles, aber kontrolliertes Deployment
+* Nachbereitung (Post-Mortem, Dokumentation der Ursache)
+
+=== Rueckfall auf aeltere Version (Rollback)
+
+* Wann wird ein Rollback ausgeloest (Kriterien)
+* Technisches Vorgehen (z.B. redeploy frueheres Image, Helm-Rollback)
+* Datenaspekte (Migrationen, Feature-Toggles)
+* Dokumentation im Ticket- / Incident-System
+
+=== Nachvollziehbare Behandlung eines Incidents
+
+* Incident-Lifecycle (Erkennung, Klassifikation, Bearbeitung, Abschluss)
+* Beteiligte Rollen (Dev, Ops, Product Owner)
+* Artefakte (Runbook, Post-Mortem, verlinkte MRs)
+* Lessons Learned / Praeventive Massnahmen
+
+=== Feature-Implementation mit Feature-Toggles
+
+* Motivation fuer Feature-Toggles (risikoarmes Deployment, Canary)
+* Technische Umsetzung (Toggle-Tool oder Eigenbau)
+* Umgang in CI/CD (Tests mit/ohne Feature aktiv)
+* Strategien fuer Aufraeumen alter Toggles
+

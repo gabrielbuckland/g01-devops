@@ -1,0 +1,37 @@
+== Projektübersicht
+
+=== Erklaerung der Projektstruktur
+
+* Ueberblick ueber Repos, Dienste und Hauptkomponenten
+* Begruendung der Struktur aus Sicht Wartbarkeit, Deployment, Verantwortlichkeiten
+* Kurze Visualisierung (z.B. Architekturdiagramm referenzieren)
+
+=== Gewaehlte Branching-Strategie
+
+* Kurzbeschreibung (z.B. Trunk-Based, GitFlow, Feature-Branches light)
+* Regeln fuer:
+** Naming
+** Umgang mit Hotfixes
+** Release-Tags / Versionierung
+* Bezug zu CI/CD (wann wird gebaut, wann deployed)
+
+=== Verzeichnis der Zugriffspunkte
+
+* Git-Repositories (URLs)
+* CI/CD-Pipelines (z.B. GitLab CI, GitHub Actions)
+* Laufende Umgebungen (Dev, Test, Prod; inkl. Links zu Dashboards / UIs)
+* Monitoring / Logging / Alerting (z.B. Grafana, Kibana, Sentry)
+
+=== Verwendete Technologien und Tools
+
+* Programmiersprachen, Frameworks
+* Build- und Deployment-Tools
+* Container / Orchestrierung (z.B. Docker, Kubernetes)
+* Infrastruktur (Cloud-Provider, On-Prem, IaC-Tools)
+* Security-Tools (z.B. Dependabot, SAST/DAST)
+
+=== Erfahrungen / Lessons Learned
+
+* Was hat gut funktioniert (Prozess, Tools, Patterns)
+* Wo gab es Probleme (typische Stolpersteine)
+* Konkrete Verbesserungsmassnahmen fuer kuenftige Projekte

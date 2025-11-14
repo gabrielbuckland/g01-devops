@@ -1,0 +1,25 @@
+== Basisszenarien (muessen alle erfuellt werden)
+
+=== Einfacher Change-Request
+
+* Eingang des Change-Requests (Ticket-System, Template)
+* Umsetzung im Branch (inkl. Referenz auf Ticket)
+* Q-Gate (Code-Review, Tests, Quality-Checks)
+* Merge-Request (inkl. erforderlicher Checks)
+* Delivery und Deployment (Pfad bis in Zielumgebung beschreiben)
+
+=== Neuer Mitarbeitender: Aufsetzen der Entwicklungsumgebung
+
+* Schritt-fuer-Schritt-Anleitung (Onboarding Guide)
+* Noetige Zugriffe (Git, CI/CD, Secrets, Container-Registry)
+* Lokale Umgebung (Tools, Mindestkonfiguration, Beispiel-Workflow)
+* Typische Probleme und Loesungen
+
+=== Einhaltung der 12-Factor-Kriterien (Ueberblick)
+
+* Konfiguration ueber Environment-Variablen
+* Logging-Handhabung
+* Build- vs. Run-Stage
+* Skalierung
+* Externe Dienste (DB, Message-Broker, etc.)
+* Kurz pro Faktor: wie im Projekt umgesetzt (oder bewusst nicht)
