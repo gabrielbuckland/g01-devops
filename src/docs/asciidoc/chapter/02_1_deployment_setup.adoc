@@ -1,6 +1,6 @@
 == Deployment Setup
 
-=== 1. Add Jib Plugin to `pom.xml`
+=== 1. Jib Plugin zum `pom.xml` hinzufügen
 
 [source,xml]
 ----
@@ -16,11 +16,11 @@
 </plugin>
 ----
 
-NOTE: The image tag contains the container registry URL and the image name of the Docker image.
+NOTE: Den Image-Tag enthält die Container-Registry-URL und den Image-Namen des Docker-Images.
 
-=== 2. Add CI/CD Docker Pipeline
+=== 2. Docker zur CI/CD Pipeline hinzufügen
 
-Add a GitLab CI/CD pipeline definition that builds and pushes the Docker image to the registry using the Jib plugin.
+Fügen Sie eine GitLab CI/CD-Pipeline-Definition hinzu, die das Docker-Image erstellt und mithilfe des Jib-Plugins in die Registry hochlädt.
 
 [source,yaml]
 ----
@@ -53,14 +53,14 @@ docker:
         -Djib.to.auth.password="$CI_REGISTRY_PASSWORD"
 ----
 
-Paste this into a `.gitlab-ci.yml` file in the root of your repository.
+Fügen Sie dies in die `.gitlab-ci.yml`-Datei im Stammverzeichnis Ihres Repositorys ein.
 
-=== 3. Add Production Compose File
+=== 3. Produktions-Docker-Compose Datei erstellen
 
-Create a `docker_prod.yml` file that contains:
+Erstelle das `docker_prod.yml` File, welches folgendes enthählt:
 
- * A `postgres` service.
- * The application service using the created Docker image.
+ * Ein `postgres` Service.
+ * Der Anwendungsdienst welcher das erstellte Docker-Image nutzt.
 
 [source,yaml]
 ----
@@ -123,9 +123,9 @@ services:
 ----
 
 
-=== 4. Create `.env` File
+=== 4. Erstelle ein `.env` File
 
-Create a `.env` file to store environment variables for the Docker Compose setup.
+Erstelle ein `.env` File, um die Umgebungsvariablen für das Docker Compose Setup zu speichern
 
 [source,bash]
 ----
@@ -136,7 +136,7 @@ POSTGRES_DB=postgres
 JDBC_URL=jdbc:postgresql://postgres:5432/${POSTGRES_DB}
 ----
 
-IMPORTANT: replace the values with secure credentials.
+IMPORTANT: Ersetze die Werte mit sicheren Credentials.
 
 
 
