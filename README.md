@@ -33,6 +33,9 @@ MICRONAUT_ENVIRONMENTS=local java -jar ./target/g01-form-0.1.jar
 
 4. The application will be available at: [http://localhost:8080](http://localhost:8080)
 
+### Database migrations
+- Flyway runs automatically on startup; place new migration scripts in `backend/src/main/resources/db/migration` using the `V##__description.sql` naming convention.
+
 ---
 
 ## Starting everything inside docker just like on the VMs
