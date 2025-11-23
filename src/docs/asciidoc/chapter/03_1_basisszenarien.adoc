@@ -222,9 +222,83 @@ Ein neuer Mitarbeitender gilt als vollständig aufgesetzt, wenn:
 
 === Einhaltung der 12-Factor-Kriterien (Überblick)
 
-* Konfiguration über Environment-Variablen
-* Logging-Handhabung
-* Build- vs. Run-Stage
-* Skalierung
-* Externe Dienste (DB, Message-Broker, etc.)
-* Kurz pro Faktor: wie im Projekt umgesetzt (oder bewusst nicht)
+Die folgende Tabelle analysiert die Compliance der Anwendung mit den 12 Faktoren moderner Cloud-Native-Applikationen.
+
+[cols="1,^1,3", options="header"]
+|===
+| Faktor | Status | Kritische Analyse & Beleg
+
+| *1. Codebasis* +
+Eine Codebasis, viele Deployments
+| [green]#*ERFÜLLT*#
+| Es existiert ein zentrales Git-Repository für Backend und Frontend. +
+_Beleg:_ `.gitlab-ci.yml` verwaltet Build & Deploy zentral.
+
+| *2. Abhängigkeiten* +
+Explizite Deklaration
+| [green]#*ERFÜLLT*#
+| Maven (`pom.xml`) und NPM (`package.json`) fixieren Versionen. System-Libs sind in Docker isoliert.
+
+| *3. Konfiguration* +
+Config in Umgebungsvariablen
+| [green]#*ERFÜLLT*#
+| Nutzung von Environment-Variablen in `docker_prod.yml` (z.B. `${POSTGRES_USER}`) statt Hardcoding.
+
+| *4. Unterstützende Dienste* +
+Dienste als Ressourcen
+| [green]#*ERFÜLLT*#
+| Datenbanken werden via URL adressiert. Austausch gegen Managed-DB ohne Code-Änderung möglich.
+
+| *5. Build, Release, Run* +
+Strikte Trennung
+| [green]#*ERFÜLLT*#
+| Pipeline trennt Build (Jib), Release (Docker Tag) und Run (Deploy). Keine Code-Änderung zur Laufzeit möglich.
+
+| *6. Prozesse* +
+Zustandslosigkeit
+| [green]#*ERFÜLLT*#
+| Container speichern keinen State (Session/Daten) lokal, sondern nutzen die Datenbank.
+
+| *7. Portbindung* +
+Export via Port
+| [green]#*ERFÜLLT*#
+| Services (Micronaut/SvelteKit) bringen eigene Server mit und exportieren Ports (8080, 3000).
+
+| *8. Nebenläufigkeit* +
+Skalierung via Prozesse
+| [green]#*ERFÜLLT*#
+| Skalierung über Replicas möglich, da Prozesse zustandslos sind.
+
+| *9. Wegwerfbarkeit* +
+Schneller Start/Stop
+| [green]#*ERFÜLLT*#
+| Micronaut ist auf schnellen Start optimiert; Container sind flüchtig konzipiert.
+
+| *10. Dev-Prod-Parität* +
+Umgebungen angleichen
+| [yellow]#*WARNUNG*#
+| _Teilweise erfüllt._ Lokal wird oft `mvn`/`npm` direkt genutzt statt der Docker-Container. Das weicht von Prod ab. +
+_Empfehlung:_ Entwicklung primär via `docker-compose` durchführen.
+
+| *11. Logs* +
+Logs als Event-Streams
+| [green]#*ERFÜLLT*#
+| App schreibt auf `STDOUT`; Docker fängt Stream ab. +
+_Beleg:_ `ConsoleAppender` in `logback.xml`.
+
+| *12. Admin-Prozesse* +
+One-off Prozesse
+| [red]#*FEHLT*#
+| _Nicht erfüllt._ DB-Migration läuft automatisch beim App-Start (`schema-generate`), nicht als separater Prozess. +
+_Empfehlung:_ Migrationstool (Flyway) als Init-Container einführen.
+|===
+
+=== Fazit & Massnahmen (für Abgabe entfernen)
+
+Du hast völlig recht, Skepsis war angebracht. Wir haben zwei "Baustellen":
+
+1.  **Faktor 12 (Admin-Prozesse):** Dies ist der kritischste Punkt.
+* *Lösung:* Migrationstool (Flyway) einführen und Migrationen als separaten CI-Job oder Init-Container ausführen.
+
+2.  **Faktor 10 (Dev-Prod-Parität):** Hier gibt es Abweichungen im Workflow.
+* *Lösung:* Die `README.md` sollte primär die Entwicklung _innerhalb_ von Docker (z.B. via `docker compose -f docker_test.yml up`) propagieren, statt der lokalen Java/Node-Befehle, oder DevContainer nutzen, damit die lokale Umgebung der Produktion gleicht.
