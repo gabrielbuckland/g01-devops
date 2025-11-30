@@ -22,7 +22,7 @@ backend:
   stage: build
   image: maven:3.9-eclipse-temurin-21
   rules:
-    - if: $CI_COMMIT_BRANCH           # only branches
+    - if: $CI_COMMIT_BRANCH # only branches
   script:
     - cd backend
     - echo "Building and pushing frontend image with tag - $CI_COMMIT_SHA"
@@ -41,7 +41,7 @@ frontend:
   services:
     - docker:dind
   rules:
-    - if: $CI_COMMIT_BRANCH           # only branches
+    - if: $CI_COMMIT_BRANCH # only branches
   script:
     - cd frontend
     - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
@@ -53,9 +53,9 @@ frontend:
 # ---------- Deploy: test (uses your utils.yml rules) ----------
 deploy-to-test:
   stage: deploy
-  tags: ['deploy-test-docker']
+  tags: ["deploy-test-docker"]
   rules:
-    - !reference [ .test_deployment_rules, rules ]
+    - !reference [.test_deployment_rules, rules]
   image: docker:28.4.0-cli
   environment:
     name: test
@@ -69,6 +69,8 @@ deploy-to-test:
       POSTGRES_PASSWORD=${TEST_POSTGRES_PW}
       POSTGRES_DB=${TEST_POSTGRES_DB}
       IMAGE_TAG=${CI_COMMIT_SHA}
+      UNLEASH_URL=${UNLEASH_URL}
+      UNLEASH_INSTANCE_ID=${UNLEASH_INSTANCE_ID}
       EOF
     - docker compose --env-file .env.test -f docker_test.yml down --remove-orphans --timeout 60 || true
     - docker compose --env-file .env.test -f docker_test.yml pull
@@ -78,9 +80,9 @@ deploy-to-test:
 # ---------- Deploy: prod (uses your utils.yml rules) ----------
 deploy-to-prod:
   stage: deploy
-  tags: ['deploy-prod-docker']
+  tags: ["deploy-prod-docker"]
   rules:
-    - !reference [ .prod_deployment_rules, rules ]
+    - !reference [.prod_deployment_rules, rules]
   image: docker:28.4.0-cli
   environment:
     name: prod
@@ -94,6 +96,8 @@ deploy-to-prod:
       POSTGRES_PASSWORD=${PROD_POSTGRES_PW}
       POSTGRES_DB=${PROD_POSTGRES_DB}
       IMAGE_TAG=${CI_COMMIT_SHA}
+      UNLEASH_URL=${UNLEASH_URL}
+      UNLEASH_INSTANCE_ID=${UNLEASH_INSTANCE_ID}
       EOF
     - docker compose --env-file .env.prod -f docker_prod.yml down --remove-orphans --timeout 60 || true
     - docker compose --env-file .env.prod -f docker_prod.yml pull

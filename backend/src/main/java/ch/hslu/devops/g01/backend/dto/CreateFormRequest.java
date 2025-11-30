@@ -7,8 +7,8 @@ import jakarta.validation.constraints.NotBlank;
 
 @Serdeable
 @Introspected
-public record CreateFormRequest (
-    @NotBlank @Email String email,
-    @NotBlank String vorname,
-    @NotBlank String nachname
-) {}
+public record CreateFormRequest(
+        @NotBlank @Email String email,
+        @NotBlank String vorname,
+        @NotBlank String nachname) {
+}

@@ -14,7 +14,11 @@ services:
     ports:
       - "5432:5432"
     healthcheck:
-      test: [ "CMD-SHELL", "PGPASSWORD=$$POSTGRES_PASSWORD pg_isready -h localhost -p 5432 -U $$POSTGRES_USER -d $$POSTGRES_DB || exit 1" ]
+      test:
+        [
+          "CMD-SHELL",
+          "PGPASSWORD=$$POSTGRES_PASSWORD pg_isready -h localhost -p 5432 -U $$POSTGRES_USER -d $$POSTGRES_DB || exit 1",
+        ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -32,6 +36,8 @@ services:
       DATASOURCES_DEFAULT_USERNAME: ${POSTGRES_USER}
       DATASOURCES_DEFAULT_PASSWORD: ${POSTGRES_PASSWORD}
       MICRONAUT_ENVIRONMENTS: prod
+      UNLEASH_URL: ${UNLEASH_URL}
+      UNLEASH_INSTANCE_ID: ${UNLEASH_INSTANCE_ID}
       JAVA_OPTS: ${JAVA_OPTS:-"-XX:+ExitOnOutOfMemoryError -XX:MaxRAMPercentage=75"}
     healthcheck:
       test: ["CMD-SHELL", "curl -fsS http://localhost:8080/api || exit 1"]

@@ -1,8 +1,11 @@
 package ch.hslu.devops.g01;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import ch.hslu.devops.g01.backend.dto.CreateFormRequest;
 import ch.hslu.devops.g01.backend.entity.Form;
 import ch.hslu.devops.g01.backend.repository.FormRepository;
+import io.getunleash.Unleash;
 import io.micronaut.http.HttpResponse;
 import io.micronaut.http.HttpStatus;
 import io.micronaut.http.annotation.*;
@@ -11,26 +14,39 @@ import io.micronaut.validation.Validated;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 
-
 @Validated
 @Controller("/form")
 public class FormController {
 
     private final FormRepository repository;
 
-    public FormController(FormRepository repository){
+    private final Unleash unleash;
+
+    private final Logger logger = LoggerFactory.getLogger(FormController.class);
+
+    public FormController(FormRepository repository, Unleash unleash) {
         this.repository = repository;
+        this.unleash = unleash;
     }
 
     @Get("/")
-    public Iterable<Form> all(){
+    public Iterable<Form> all() {
         return repository.findAll();
     }
 
     @Post("/")
-    public HttpResponse<Form> create(@Valid @Body CreateFormRequest req){
-        if(repository.existsById(req.email())){
+    public HttpResponse<Form> create(@Valid @Body CreateFormRequest req) {
+        if (repository.existsById(req.email())) {
             throw new HttpStatusException(HttpStatus.CONFLICT, "Email already exists!");
+        }
+        logger.info("Loading fix is enabled: " + this.unleash.isEnabled("fixloading"));
+        if (!this.unleash.isEnabled("fixloading")) {
+            try {
+                Thread.sleep(10000);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new HttpStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Request interrupted");
+            }
         }
         var email = req.email().trim().toLowerCase();
         var saved = repository.save(new Form(email, req.vorname(), req.nachname()));
@@ -38,8 +54,8 @@ public class FormController {
     }
 
     @Delete("delete/{email}")
-    public HttpResponse<?> delete(@Email @PathVariable String email){
-        if (repository.existsById(email)){
+    public HttpResponse<?> delete(@Email @PathVariable String email) {
+        if (repository.existsById(email)) {
             repository.deleteById(email);
             return HttpResponse.noContent();
         }
@@ -47,12 +63,10 @@ public class FormController {
     }
 
     @Get("/get/{email}")
-    public HttpResponse<Form> getById(@Email @PathVariable String email){
+    public HttpResponse<Form> getById(@Email @PathVariable String email) {
         return repository.findById(email)
                 .map(HttpResponse::ok)
                 .orElse(HttpResponse.notFound());
     }
-
-
 
 }
