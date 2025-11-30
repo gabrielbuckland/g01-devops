@@ -11,11 +11,6 @@ public class UnleashFactory {
 
     @Singleton
     UnleashConfig unleashConfig(UnleashConfigurationProperties props) {
-        System.out.println(props.getAppName());
-        System.out.println(props.getEnvironment());
-        System.out.println(props.getInstanceId());
-        System.out.println(props.getUrl());
-        System.out.println(props.getFetchInterval());
         return UnleashConfig.builder()
                 .appName(props.getAppName())
                 .environment(props.getEnvironment())
