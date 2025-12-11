@@ -18,8 +18,6 @@ variables:
 .prod_deployment_rules:
   rules:
     - !reference [ .is_main_branch:manual, rules ]
-    - !reference [ .is_feature_branch:manual, rules ]
-    - !reference [ .is_bugfix_branch:manual, rules ]
     - !reference [ .is_hotfix_branch:manual, rules ]
 
 ################
