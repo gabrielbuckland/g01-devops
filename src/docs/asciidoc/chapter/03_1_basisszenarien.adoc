@@ -8,6 +8,121 @@
 * Merge-Request (inkl. erforderlicher Checks)
 * Delivery und Deployment (Pfad bis in Zielumgebung beschreiben)
 
+
+== 1. Einfacher Change-Request
+
+Ein Change-Request beginnt typischerweise mit der Erstellung eines neuen Branches.
+Die Pipeline unterscheidet dabei folgende Typen:
+
+* *feature/* – neue Funktionalität
+* *bugfix/* – Fehlerbehebung
+* *hotfix/* – dringende Korrektur
+* *main* – stabiler Hauptbranch
+
+Sobald auf einem dieser Branches ein Commit gepusht wird, startet die Pipeline automatisch (ausser bei Tags).
+Der main branch ist wie üblich geschützt.
+
+
+== 2. Umsetzung (Build & Vorbereitung)
+
+Die technische Umsetzung eines Changes beginnt in der Pipeline mit der *build*-Stage.
+Hier werden Backend und Frontend automatisch gebaut:
+
+=== Backend Build
+
+* Wird für jeden Branch ausgeführt.
+* Baut das Artefakt mittels Maven und Jib.
+* Erzeugt ein Docker-Image, getaggt mit dem Commit-SHA.
+* Push zum Container Registry.
+
+=== Frontend Build
+
+* Analog zum Backend-Build.
+* Docker-Image wird gebaut und ins Registry gepusht.
+
+Diese Build-Prozesse bilden die Grundlage für spätere Test- und Deployments, da die Images auf Test- und Produktionssystemen wiederverwendet werden.
+
+== 3. Q-Gate
+
+Das Q-Gate definiert, ob ein Change sauber gebaut und grundlegend geprüft wurde.
+Aus Sicht dieser Pipeline besteht das Q-Gate aus:
+
+* erfolgreichem Build inkl. der Unit- und Integrationstests von Backend und Frontend
+* erfolgreicher SAST Analyse
+
+Je nach Branchtyp ist auch relevant, ob ein Deployment manuell bestätigt werden muss (z.B. für Feature, Bugfix, Hotfix).
+Damit ist das Q-Gate ein technischer Qualitätsfilter, bevor ein Merge-Request erstellt und bewertet wird.
+
+== 4. Merge-Request (Code Review & Freigabe)
+
+Nachdem ein Change erfolgreich gebaut und durch das Q-Gate gegangen ist, kann ein Merge-Request erstellt werden.
+
+Der Merge-Request profitiert von:
+
+* automatisch erzeugten Build-Artefakten (Docker-Images)
+* SAST-Bericht
+
+Für den Merge in den *main* Branch ist wesentlich, dass:
+
+* der Change sauber gebaut wurde
+* alle Testergebnisse erfolgreich sind
+* Reviews und Freigaben abgeschlossen sind (4 Augenprinzip)
+
+Sobald der Merge erfolgt, startet eine neue Pipeline auf *main*, die als Grundlage für die Delivery dient.
+
+== 5. Delivery (Bereitstellung auf Testumgebung)
+
+Jeder Change, der in einem Feature-, Bugfix- oder Hotfix-Branch stattfindet, kann manuell auf der Testumgebung deployed werden.
+
+Führt man den Merge in den *main* Branch durch, wird das Test-Deployment *automatisch* angestossen.
+
+Das Deployment auf Test:
+
+* erzeugt eine `.env.test` Datei mit Test-Passwörtern und DB-Informationen
+* lädt die passenden Docker-Images (beide Services nutzen das Commit-SHA)
+* startet die Anwendung via `docker compose`
+* lässt das System mittels `--wait` hochfahren
+
+Dies bildet den Schritt der Delivery, also die Bereitstellung für Qualitäts- und Abnahmetests.
+
+== 6. Deploy (Prod-Rollout)
+
+Das Deployment auf die Produktionsumgebung erfolgt kontrolliert und ist grundsätzlich *manuell*, selbst für *main*.
+
+Der Ablauf ist analog zum Test-Deployment:
+
+* Erstellung der `.env.prod` Datei
+* Stop und Neustart der Compose-Services
+* Laden der neuen Images
+* Start mit Health-Wait
+
+Die Entscheidung, wann ein Change produktiv geht, wird bewusst manuell getroffen – typischerweise nach erfolgreicher Abnahme auf der Testumgebung.
+
+== Zusammenfassung des Lebenszyklus
+
+[cols="1,3",options="header"]
+|===
+|Phase |Beschreibung
+
+|Einfacher Change-Request
+|Branch wird erstellt, Pipeline startet automatisch.
+
+|Umsetzung
+|Build von Backend und Frontend, SAST Sicherheitsprüfung.
+
+|Q-Gate
+|Build und Tests müssen erfolgreich sein, Branch-Regeln müssen passen.
+
+|Merge-Request
+|Review, Diskussion und Freigabe. Nach Merge in main startet eine neue Pipeline.
+
+|Delivery
+|Automatisches (main) oder manuelles (feature/bugfix/hotfix) Deployment auf Test.
+
+|Deploy
+|Manuelles Deployment auf Produktion; stabiler, kontrollierter Rollout.
+|===
+
 === Neuer Mitarbeitender: Aufsetzen der Entwicklungsumgebung
 
 Dieses Kapitel beschreibt, wie ein neuer Mitarbeitender die komplette Entwicklungsumgebung selbstständig einrichten kann. Ziel ist, dass nach dieser Anleitung ein erster Build läuft und ein einfacher End-to-End-Workflow (Code ändern, testen, pushen) für Backend (Java Micronaut, Java 21) und Frontend (Svelte) funktioniert.
