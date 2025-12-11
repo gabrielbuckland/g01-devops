@@ -9,9 +9,12 @@
 * Delivery und Deployment (Pfad bis in Zielumgebung beschreiben)
 
 
-== 1. Einfacher Change-Request
+==== 1. Einfacher Change-Request
 
 Ein Change-Request beginnt typischerweise mit der Erstellung eines neuen Branches.
+Der Branch beeinhaltet in der commit Nachricht oder im Branchnamen die Ticket-Nr.
+z.B. feature/introduce-type-safety-#412
+
 Die Pipeline unterscheidet dabei folgende Typen:
 
 * *feature/* – neue Funktionalität
@@ -23,26 +26,26 @@ Sobald auf einem dieser Branches ein Commit gepusht wird, startet die Pipeline a
 Der main branch ist wie üblich geschützt.
 
 
-== 2. Umsetzung (Build & Vorbereitung)
+==== 2. Umsetzung (Build & Vorbereitung)
 
 Die technische Umsetzung eines Changes beginnt in der Pipeline mit der *build*-Stage.
 Hier werden Backend und Frontend automatisch gebaut:
 
-=== Backend Build
+===== Backend Build
 
 * Wird für jeden Branch ausgeführt.
 * Baut das Artefakt mittels Maven und Jib.
 * Erzeugt ein Docker-Image, getaggt mit dem Commit-SHA.
 * Push zum Container Registry.
 
-=== Frontend Build
+===== Frontend Build
 
 * Analog zum Backend-Build.
 * Docker-Image wird gebaut und ins Registry gepusht.
 
 Diese Build-Prozesse bilden die Grundlage für spätere Test- und Deployments, da die Images auf Test- und Produktionssystemen wiederverwendet werden.
 
-== 3. Q-Gate
+==== 3. Q-Gate
 
 Das Q-Gate definiert, ob ein Change sauber gebaut und grundlegend geprüft wurde.
 Aus Sicht dieser Pipeline besteht das Q-Gate aus:
@@ -53,7 +56,7 @@ Aus Sicht dieser Pipeline besteht das Q-Gate aus:
 Je nach Branchtyp ist auch relevant, ob ein Deployment manuell bestätigt werden muss (z.B. für Feature, Bugfix, Hotfix).
 Damit ist das Q-Gate ein technischer Qualitätsfilter, bevor ein Merge-Request erstellt und bewertet wird.
 
-== 4. Merge-Request (Code Review & Freigabe)
+==== 4. Merge-Request (Code Review & Freigabe)
 
 Nachdem ein Change erfolgreich gebaut und durch das Q-Gate gegangen ist, kann ein Merge-Request erstellt werden.
 
@@ -70,7 +73,7 @@ Für den Merge in den *main* Branch ist wesentlich, dass:
 
 Sobald der Merge erfolgt, startet eine neue Pipeline auf *main*, die als Grundlage für die Delivery dient.
 
-== 5. Delivery (Bereitstellung auf Testumgebung)
+==== 5. Delivery (Bereitstellung auf Testumgebung)
 
 Jeder Change, der in einem Feature-, Bugfix- oder Hotfix-Branch stattfindet, kann manuell auf der Testumgebung deployed werden.
 Alternativ kann der Hotfix branch auch manuell auf Prod deployen werden
@@ -85,7 +88,7 @@ Das Deployment auf Test:
 
 Dies bildet den Schritt der Delivery, also die Bereitstellung für Qualitäts- und Abnahmetests.
 
-== 6. Deploy (Prod-Rollout)
+==== 6. Deploy (Prod-Rollout)
 
 Das Deployment auf die Produktionsumgebung erfolgt kontrolliert und ist grundsätzlich *manuell*, selbst für *main*.
 
@@ -98,7 +101,7 @@ Der Ablauf ist analog zum Test-Deployment:
 
 Die Entscheidung, wann ein Change produktiv geht, wird bewusst manuell getroffen – typischerweise nach erfolgreicher Abnahme auf der Testumgebung.
 
-== Zusammenfassung des Lebenszyklus
+==== Zusammenfassung des Lebenszyklus
 
 [cols="1,3",options="header"]
 |===
