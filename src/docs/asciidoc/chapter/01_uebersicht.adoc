@@ -1,6 +1,6 @@
 == Projektübersicht
 
-=== Erklaerung der Projektstruktur
+=== Erklärung der Projektstruktur
 
 Das Repository ist in zwei eigenständige Hauptprojekte unterteilt, um die Anwendungslogik von der Überwachungsinfrastruktur zu entkoppeln:
 
@@ -15,7 +15,7 @@ Das Repository ist in zwei eigenständige Hauptprojekte unterteilt, um die Anwen
 
 Diese Trennung erlaubt es, Wartungsarbeiten am Monitoring durchzuführen, ohne die Hauptanwendung neu deployen zu müssen, und fördert eine klare Verantwortlichkeitstrennung.
 
-=== Gewaehlte Branching-Strategie
+=== Gewählte Branching-Strategie
 
 Es wird eine an **GitFlow** angelehnte Strategie verwendet, gesteuert durch die `gitlab/utils.yml`:
 
@@ -81,4 +81,4 @@ Die Auswahl der Technologien erfolgte mit dem Ziel, eine typensichere und contai
 
 * Was hat gut funktioniert (Prozess, Tools, Patterns)
 * Wo gab es Probleme (typische Stolpersteine)
-* Konkrete Verbesserungsmassnahmen fuer kuenftige Projekte
+* Konkrete Verbesserungsmassnahmen für künftige Projekte

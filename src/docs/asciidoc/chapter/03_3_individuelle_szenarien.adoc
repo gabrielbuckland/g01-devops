@@ -1,17 +1,17 @@
 == Individuelle Szenarien
 
-Kurze Beschreibung, welche individuellen Szenarien zusaetzlich definiert wurden und warum sie fuer dieses Projekt relevant sind.
+Kurze Beschreibung, welche individuellen Szenarien zusätzlich definiert wurden und warum sie fuer dieses Projekt relevant sind.
 
 === Individuelles Szenario 1: _Titel_
 
-* Kontext und Begruendung (warum relevant fuer dieses Projekt)
+* Kontext und Begründung (warum relevant für dieses Projekt)
 * Ablauf / Prozessbeschreibung
 * Beteiligte Systeme und Rollen
 * Dokumentation der Ergebnisse
 
 === Individuelles Szenario 2: _Titel_
 
-* Kontext und Begruendung
+* Kontext und Begründung
 * Ablauf / Prozessbeschreibung
 * Beteiligte Systeme und Rollen
 * Dokumentation der Ergebnisse

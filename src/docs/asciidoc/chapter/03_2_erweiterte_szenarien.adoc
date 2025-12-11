@@ -66,28 +66,29 @@ Das heisst konkret:
 
 * Nur Pipelines auf `main` oder `hotfix/...` sehen einen *Deploy-to-Prod*-Job.
 * Dieser Job ist immer **manuell** (`when: manual`).
-* Feature- und Bugfix-Branches koennen **nicht** direkt auf Produktion deployen.
+* Feature- und Bugfix-Branches können **nicht** direkt auf Produktion deployen.
 
-Es gibt damit zwei typische Varianten fuer einen Notfall-Bugfix:
+Es gibt damit zwei typische Varianten für einen Notfall-Bugfix:
 
 1. **Direkter Hotfix-Deploy von `hotfix/...` auf Produktion**
-* Pipeline laeuft auf dem Hotfix-Branch.
+* Pipeline läuft auf dem Hotfix-Branch.
 * Optional: manuelles Deploy auf Test (Absicherung).
 * Danach: manueller Start des Prod-Deploy-Jobs aus derselben Pipeline
 (durch `.is_hotfix_branch:manual` in `.prod_deployment_rules`).
 * Vorteil: extrem schnell, direkt aus dem Notfall-Branch.
 
-2. **Hotfix ueber `main` stabilisieren und dann deployen**
-* Hotfix wird nach kurzer Pruefung in `main` gemergt.
+2. **Hotfix über `main` stabilisieren und dann deployen**
+* Hotfix wird nach kurzer Prüfung in `main` gemergt.
 * Neue Pipeline auf `main` startet.
-* Prod-Deploy ist manuell verfuegbar (ueber `.is_main_branch:manual`).
+* Prod-Deploy ist manuell verfügbar (über `.is_main_branch:manual`).
 * Vorteil: Historie und Codebasis bleiben sauber synchronisiert, `main` entspricht Produktion.
 
-In beiden Faellen:
+In beiden Fällen:
 
-* wird das produktive Deployment nur durch expliziten manuellen Klick ausgeloest,
+* wird das produktive Deployment nur durch expliziten manuellen Klick ausgelöst,
 * kommt ausschliesslich das Image mit genau diesem Commit-Hash (`CI_COMMIT_SHA`) zum Einsatz,
-* laeuft das Deployment kontrolliert ueber `docker compose` mit Stop, Pull, Start und `--wait`.
+* läuft das Deployment kontrolliert über `docker compose` mit Stop, Pull, Start und `--wait`.
+
 === Rückfall auf ältere Version (Rollback)
 
 * Wann wird ein Rollback ausgelöst (Kriterien)
