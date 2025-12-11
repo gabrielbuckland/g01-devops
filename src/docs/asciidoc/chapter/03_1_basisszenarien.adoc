@@ -73,7 +73,7 @@ Sobald der Merge erfolgt, startet eine neue Pipeline auf *main*, die als Grundla
 == 5. Delivery (Bereitstellung auf Testumgebung)
 
 Jeder Change, der in einem Feature-, Bugfix- oder Hotfix-Branch stattfindet, kann manuell auf der Testumgebung deployed werden.
-
+Alternativ kann der Hotfix branch auch manuell auf Prod deployen werden
 Führt man den Merge in den *main* Branch durch, wird das Test-Deployment *automatisch* angestossen.
 
 Das Deployment auf Test:

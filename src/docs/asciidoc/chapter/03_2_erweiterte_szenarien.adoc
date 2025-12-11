@@ -9,6 +9,85 @@ Kurze Einleitung: Welche Szenarien wurden konkret umgesetzt und warum.
 * Schnelles, aber kontrolliertes Deployment
 * Nachbereitung (Post-Mortem, Dokumentation der Ursache)
 
+==== Vorgehen für Hotfix (Branching, Tests, Freigaben)
+
+Der technische Ablauf für einen Notfall-Bugfix startet mit einem eigenen Hotfix-Branch:
+
+* Branch-Namensschema: `hotfix/<kurze-beschreibung>`
+* Nach dem ersten Commit und Push startet automatisch eine Pipeline für diesen Branch.
+
+Dabei passieren folgende Schritte:
+
+1. *Build-Stage*
+* Backend-Image wird gebaut (Maven + Jib, Tag = `CI_COMMIT_SHA`)
+* Frontend-Image wird gebaut (Docker Build, Tag = `CI_COMMIT_SHA`)
+
+2. *Test-Stage*
+* SAST-Job läuft im `test`-Stage (Security Scan)
+* Hotfix-Jobs verwenden `allow_failure: true`, damit in einem Notfall nicht alles strikt blockiert wird, aber dennoch Feedback vorliegt.
+
+3. *Optionale Deployments auf Test*
+Das Test-Deployment verwendet die aggregierten Regeln:
+
+   [source,yaml]
+   ----
+   .test_deployment_rules:
+     rules:
+       - !reference [ .is_main_branch, rules ]
+       - !reference [ .is_feature_branch:manual, rules ]
+       - !reference [ .is_bugfix_branch:manual, rules ]
+       - !reference [ .is_hotfix_branch:manual, rules ]
+   ----
+
+   Fuer Hotfix-Branches bedeutet dies:
+
+* Deploy auf Test ist **manuell** (Button im Pipeline-UI, `when: manual`).
+* So kann der Bugfix in einer kontrollierten Testumgebung geprüft werden, bevor er in Produktion geht.
+
+4. *Freigaben*
+Vor dem Merge und vor dem Produktions-Deployment sollte mindestens erfolgen:
+
+* technisches Review (so weit unter Zeitdruck möglich)
+* Entscheidung durch verantwortliche Rolle (z.B. Incident-Manager, Product Owner, Betrieb)
+
+==== Schnelles, aber kontrolliertes Deployment
+
+Die neuen Rules sorgen dafuer, dass es *kein automatisches* Deployment auf Produktion gibt – weder fuer `main` noch fuer `hotfix`:
+
+[source,yaml]
+----
+.prod_deployment_rules:
+  rules:
+    - !reference [ .is_main_branch:manual, rules ]
+    - !reference [ .is_hotfix_branch:manual, rules ]
+----
+
+Das heisst konkret:
+
+* Nur Pipelines auf `main` oder `hotfix/...` sehen einen *Deploy-to-Prod*-Job.
+* Dieser Job ist immer **manuell** (`when: manual`).
+* Feature- und Bugfix-Branches koennen **nicht** direkt auf Produktion deployen.
+
+Es gibt damit zwei typische Varianten fuer einen Notfall-Bugfix:
+
+1. **Direkter Hotfix-Deploy von `hotfix/...` auf Produktion**
+* Pipeline laeuft auf dem Hotfix-Branch.
+* Optional: manuelles Deploy auf Test (Absicherung).
+* Danach: manueller Start des Prod-Deploy-Jobs aus derselben Pipeline
+(durch `.is_hotfix_branch:manual` in `.prod_deployment_rules`).
+* Vorteil: extrem schnell, direkt aus dem Notfall-Branch.
+
+2. **Hotfix ueber `main` stabilisieren und dann deployen**
+* Hotfix wird nach kurzer Pruefung in `main` gemergt.
+* Neue Pipeline auf `main` startet.
+* Prod-Deploy ist manuell verfuegbar (ueber `.is_main_branch:manual`).
+* Vorteil: Historie und Codebasis bleiben sauber synchronisiert, `main` entspricht Produktion.
+
+In beiden Faellen:
+
+* wird das produktive Deployment nur durch expliziten manuellen Klick ausgeloest,
+* kommt ausschliesslich das Image mit genau diesem Commit-Hash (`CI_COMMIT_SHA`) zum Einsatz,
+* laeuft das Deployment kontrolliert ueber `docker compose` mit Stop, Pull, Start und `--wait`.
 === Rückfall auf ältere Version (Rollback)
 
 * Wann wird ein Rollback ausgelöst (Kriterien)
