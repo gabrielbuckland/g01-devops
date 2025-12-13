@@ -79,6 +79,55 @@ Die Auswahl der Technologien erfolgte mit dem Ziel, eine typensichere und contai
 
 === Erfahrungen / Lessons Learned
 
-* Was hat gut funktioniert (Prozess, Tools, Patterns)
-* Wo gab es Probleme (typische Stolpersteine)
-* Konkrete Verbesserungsmassnahmen für künftige Projekte
+In diesem Abschnitt reflektieren wir die technischen und prozessualen Erkenntnisse aus der Umsetzung der DevOps-Pipeline und der Architektur.
+
+==== Was hat gut funktioniert
+
+* **Stressfreier Deployment-Prozess (Lokal -> Test -> Prod):**
+Die Strategie, zuerst eine solide Basis-Pipeline zu bauen, zahlte sich aus. Wir haben den initialen Durchstich zuerst isoliert auf der Test-Umgebung durchgeführt. Da wir dort alle Kinderkrankheiten (wie SSH-Verbindungen oder Registry-Logins) behoben hatten, war der finale Release auf die Produktionsumgebung relativ stressfrei.
+
+* **Build Once, Deploy Anywhere:**
+Die Entscheidung, Docker-Images nur einmal in der `build`-Stage zu bauen und mit dem eindeutigen Commit-SHA (`$CI_COMMIT_SHA`) zu taggen, hat sich als sehr robust erwiesen.
+Wir nutzen dasselbe unveränderliche Artefakt für die Test- und Produktionsumgebung.
+
+* **Zentralisiertes Monitoring:**
+Die architektonische Entscheidung, den Monitoring-Stack (Prometheus/Grafana) auf einem dedizierten Server (`srv-003`) laufen zu lassen, der unabhängig von den Applikations-Servern (`srv-020`, `srv-021`) ist, war erfolgreich und relativ einfach aufzusetzen.
+Dadurch bleibt die Überwachung auch dann verfügbar, wenn die Applikations-Infrastruktur komplett ausfallen sollte. Die Einbindung der Exporter über `static_configs` in Prometheus war einfach zu konfigurieren und lieferte sofort wertvolle Metriken.
+
+==== Wo gab es Probleme
+
+* **Traefik Label-Komplexität:**
+Die Konfiguration des Reverse Proxies **Traefik** über Docker Labels in den `docker-compose.yml` Dateien ist zwar mächtig, aber fehleranfällig.
+Besonders die Verkettung von Middlewares (z.B. für das Strippen von Pfad-Präfixen wie `/api` oder `/pg-exporter`) führte initial zu 404-Fehlern, da die Reihenfolge und Syntax der Labels exakt stimmen muss.
+
+* **Management der Umgebungsvariablen:**
+Mit zunehmender Komplexität (Feature Toggles, DB-Credentials, Monitoring-Ports) wuchs die Anzahl der notwendigen Umgebungsvariablen in der `.gitlab-ci.yml`. Das manuelle Pflegen dieser Variablen in den GitLab UI Settings und das korrekte Durchreichen in die `.env`-Dateien der Server war ein mühsamer und potenziell fehleranfälliger Prozess.
+
+* **Feature Toggles im Frontend (Verzicht aufgrund technischer Hürden):**
+Während die Backend-Integration von Unleash (Java) reibungslos verlief, konnten wir die Feature Flags im Frontend (SvelteKit) nicht wie geplant umsetzen.
+** **Das Problem:** Der direkte Zugriff vom Browser (Client-Side) auf die GitLab-interne Unleash-Instanz scheiterte an **CORS-Richtlinien** und Authentifizierungs-Hürden. GitLab erlaubt keinen direkten öffentlichen Zugriff auf die API ohne Weiteres.
+** **Die Erkenntnis:** Um dies sauber zu lösen, hätten wir einen **Proxy-Server** (z. B. via Node.js Middleware oder Traefik) implementieren müssen, der die Requests mit dem nötigen Auth-Token an GitLab weiterleitet.
+** **Entscheidung:** Aufgrund der hohen Komplexität und des begrenzten Zeitrahmens haben wir uns entschieden, Feature Toggles in dieser Iteration **nur im Backend** zu nutzen und das Frontend-Feature vorerst aus dem Scope zu nehmen.
+
+==== Konkrete Verbesserungsmassnahmen für künftige Projekte
+
+* **Einführung von Centralized Logging:**
+Aktuell haben wir ein exzellentes Metrik-Monitoring (Prometheus), aber die Logs müssen noch per `docker logs` auf den jeweiligen Servern eingesehen werden.
+Für ein Folgestack würden wir **Grafana Loki** einführen, um Logs genauso zentral zu aggregieren wie Metriken. Dies würde die Fehleranalyse drastisch beschleunigen, da man Logs von Test und Prod an einem Ort durchsuchen könnte.
+
+* **Ausbau der Metriken:**
+Aktuell beschränkt sich unser Monitoring primär auf die Datenbank (via `postgres_exporter`) und den Status der Container.
+Für die Zukunft wäre die Aktivierung von **Micrometer** im Micronaut-Backend sinnvoll, um interne Applikations-Metriken zu erfassen. Dazu gehören:
+** **JVM-Metriken:** Heap Memory Usage, Garbage Collection Zeiten und Thread-Auslastung.
+** **HTTP-Metriken:** Request-Durchsatz, Latenzzeiten und Fehlerraten (HTTP 5xx) pro Endpunkt.
+Dies würde uns erlauben, Performance-Engpässe im Code zu identifizieren, bevor sie zu Ausfällen führen.
+
+* **Implementierung von Alerting:**
+Derzeit müssen wir aktiv auf die Grafana-Dashboards schauen, um Fehler zu bemerken.
+Ein entscheidender Schritt zur Professionalisierung wäre die Einrichtung von **Grafana Alerts** oder dem **Prometheus Alertmanager**.
+** **Healthcheck-Integration:** Wenn der Healthcheck der API (`/api` Endpoint) fehlschlägt, sollte sofort eine Benachrichtigung (z. B. an einen Slack-Channel oder per E-Mail) erfolgen.
+** **Schwellenwerte:** Alerts sollten auslösen, wenn kritische Ressourcen knapp werden (z. B. DB-Connections > 80% oder freier Speicherplatz < 10%).
+
+* **Infrastructure as Code (IaC) für VM-Setup:**
+Das initiale Setup der VMs (Installation von Docker, Runner, User-Rechte) erfolgte teilweise über Shell-Skripte (`setup.sh`) oder manuell.
+Für künftige Projekte wäre der Einsatz von **Ansible** oder **Terraform** ratsam, um die Server-Konfiguration vollständig idempotent und reproduzierbar zu gestalten.
