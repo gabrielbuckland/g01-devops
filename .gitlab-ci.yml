@@ -7,7 +7,7 @@ workflow:
 stages:
   - deploy
 
-deploy-monitoring-test:
+deploy-monitoring:
   stage: deploy
   image: docker:28.4.0-cli
   services:
@@ -34,16 +34,16 @@ deploy-monitoring-test:
     - ls -R ./prometheus || true
 
     - echo "Docker Compose config check"
-    - docker compose -f docker_test.yml config
+    - docker compose config
 
     - echo "Stopping old stack..."
-    - docker compose -f docker_test.yml down --remove-orphans || true
+    - docker compose down --remove-orphans || true
 
     - echo "Pulling images..."
-    - docker compose -f docker_test.yml pull
+    - docker compose pull
 
     - echo "Starting new stack..."
-    - docker compose -f docker_test.yml up -d --force-recreate --remove-orphans
+    - docker compose up -d --force-recreate --remove-orphans
 
     - echo "Monitoring Stack (Test) deployed!"
 

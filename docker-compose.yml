@@ -23,7 +23,7 @@ services:
     container_name: g01-monitoring-prometheus
     restart: unless-stopped
     volumes:
-      - ${CI_PROJECT_DIR}/prometheus/prometheus_test.yml:/etc/prometheus/prometheus.yml
+      - ${CI_PROJECT_DIR}/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
       - prometheus_data:/prometheus
     labels:
       - "traefik.enable=true"

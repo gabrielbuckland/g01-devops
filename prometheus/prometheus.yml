@@ -1,0 +1,17 @@
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  - job_name: 'test-postgres'
+    metrics_path: /pg-exporter/metrics
+    static_configs:
+      - targets: ['srv-020.devops.ls.eee.intern']
+
+  - job_name: 'prod-postgres'
+    metrics_path: /pg-exporter/metrics
+    static_configs:
+      - targets: ['srv-021.devops.ls.eee.intern']
