@@ -105,8 +105,8 @@ Mit zunehmender Komplexität (Feature Toggles, DB-Credentials, Monitoring-Ports)
 
 * **Feature Toggles im Frontend (Verzicht aufgrund technischer Hürden):**
 Während die Backend-Integration von Unleash (Java) reibungslos verlief, konnten wir die Feature Flags im Frontend (SvelteKit) nicht wie geplant umsetzen.
-** **Das Problem:** Der direkte Zugriff vom Browser (Client-Side) auf die GitLab-interne Unleash-Instanz scheiterte an **CORS-Richtlinien** und Authentifizierungs-Hürden. GitLab erlaubt keinen direkten öffentlichen Zugriff auf die API ohne Weiteres.
-** **Die Erkenntnis:** Um dies sauber zu lösen, hätten wir einen **Proxy-Server** (z. B. via Node.js Middleware oder Traefik) implementieren müssen, der die Requests mit dem nötigen Auth-Token an GitLab weiterleitet.
+** **Das Problem:** Der direkte Zugriff vom Browser (Client-Side) auf die Unleash-Instanz scheiterte an Authentifizierungs-Hürden.
+** **Die Erkenntnis:** Um dies sauber zu lösen, hätten wir einen **Proxy-Server** (z. B. via Node.js Middleware oder Traefik) implementieren müssen, der die Requests mit dem nötigen Auth-Token weiterleitet.
 ** **Entscheidung:** Aufgrund der hohen Komplexität und des begrenzten Zeitrahmens haben wir uns entschieden, Feature Toggles in dieser Iteration **nur im Backend** zu nutzen und das Frontend-Feature vorerst aus dem Scope zu nehmen.
 
 ==== Konkrete Verbesserungsmassnahmen für künftige Projekte
