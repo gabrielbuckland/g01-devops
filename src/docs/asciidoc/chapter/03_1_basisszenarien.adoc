@@ -1,4 +1,4 @@
-== Basisszenarien (müssen alle erfüllt werden)
+== Basisszenarien
 
 === Einfacher Change-Request
 
@@ -338,85 +338,93 @@ Ein neuer Mitarbeitender gilt als vollständig aufgesetzt, wenn:
 * [ ] Mindestens ein kleiner Change-Request (z.B. Dokumentation oder kleine UI-Änderung) komplett durch den Prozess  
   (Issue → Branch → MR → Review → Merge → Deployment in eine Nicht-Prod-Umgebung) gelaufen ist
 
-=== Einhaltung der 12-Factor-Kriterien (Überblick)
+=== Analyse der 12-Factor-App Konformität
 
-Die folgende Tabelle analysiert die Compliance der Anwendung mit den 12 Faktoren moderner Cloud-Native-Applikationen.
+Die folgende Tabelle zeigt den Erfüllungsgrad der 12 Faktoren in unserer Architektur.
 
-[cols="1,^1,3", options="header"]
+[cols="1,3", options="header"]
 |===
-| Faktor | Status | Kritische Analyse & Beleg
+| Faktor | Umsetzung / Begründung
 
-| *1. Codebasis* +
-Eine Codebasis, viele Deployments
-| [green]#*ERFÜLLT*#
-| Es existiert ein zentrales Git-Repository für Backend und Frontend. +
-_Beleg:_ `.gitlab-ci.yml` verwaltet Build & Deploy zentral.
+| *1. Codebase* +
+Eine Codebase, viele Deploys
+| Der gesamte Quellcode (Backend, Frontend, Monitoring, IaC) wird in einem zentralen Git-Repository verwaltet. Aus dieser **einen Codebase** werden alle Umgebungen (Test, Prod) versorgt. Es gibt keine separaten Repositories pro Umgebung.
+
+Nachweis: `.gitlab-ci.yml` definiert Pipelines für alle Stages aus demselben Repo.
 
 | *2. Abhängigkeiten* +
 Explizite Deklaration
-| [green]#*ERFÜLLT*#
-| Maven (`pom.xml`) und NPM (`package.json`) fixieren Versionen. System-Libs sind in Docker isoliert.
+a|
+Alle Abhängigkeiten sind explizit manifestiert und isoliert.
+
+* **Backend:** Maven `pom.xml` definiert alle Java-Libs.
+* **Frontend:** NPM `package.json` definiert JS-Libs.
+* **System:** Docker Images kapseln System-Tools (z.B. `maven:3.9-eclipse-temurin-21`), sodass keine vorinstallierten Tools auf dem Host nötig sind.
 
 | *3. Konfiguration* +
-Config in Umgebungsvariablen
-| [green]#*ERFÜLLT*#
-| Nutzung von Environment-Variablen in `docker_prod.yml` (z.B. `${POSTGRES_USER}`) statt Hardcoding.
+Konfiguration in Umgebungsvariablen
+a|
+Konfigurationen, die sich zwischen Umgebungen unterscheiden (DB-Credentials, URLs), sind strikt vom Code getrennt und werden per Environment-Variables injiziert.
+
+* **Code:** `application.properties` nutzt Platzhalter wie `${POSTGRES_USER}` oder `${UNLEASH_URL}`.
+* **Deployment:** `docker_prod.yml` setzt diese Werte zur Laufzeit. Es gibt keine hardcodierten Passwörter im Code.
 
 | *4. Unterstützende Dienste* +
-Dienste als Ressourcen
-| [green]#*ERFÜLLT*#
-| Datenbanken werden via URL adressiert. Austausch gegen Managed-DB ohne Code-Änderung möglich.
+Angehängte Ressourcen
+| Die Datenbank (PostgreSQL) und der Feature-Toggle-Server (Unleash) werden als externe Ressourcen behandelt, die über eine URL erreichbar sind. Die Applikation unterscheidet nicht zwischen einer lokalen DB oder einer Managed Cloud DB.
+
+Nachweis: JDBC-URL `jdbc:postgresql://postgres:5432/...` in `docker_prod.yml`.
 
 | *5. Build, Release, Run* +
 Strikte Trennung
-| [green]#*ERFÜLLT*#
-| Pipeline trennt Build (Jib), Release (Docker Tag) und Run (Deploy). Keine Code-Änderung zur Laufzeit möglich.
+a|
+Die CI/CD-Pipeline erzwingt diese Trennung.
+
+* **Build:** Erstellung des Docker-Images (mit Tag `$CI_COMMIT_SHA`) in der `build`-Stage.
+* **Release:** Das Image wird in die Registry gepusht. Konfigurationswerte werden vorbereitet.
+* **Run:** `docker compose up` auf dem Zielserver (Test/Prod) startet lediglich das fertige Release. Code-Änderungen zur Laufzeit sind unmöglich (`read_only: true`).
 
 | *6. Prozesse* +
-Zustandslosigkeit
-| [green]#*ERFÜLLT*#
-| Container speichern keinen State (Session/Daten) lokal, sondern nutzen die Datenbank.
+Stateless Processes
+| Die Applikations-Container (Backend/Frontend) sind **stateless**. Jeglicher persistenter Zustand wird an den unterstützenden Dienst (PostgreSQL) delegiert.
+
+Nachweis: Die Backend-Container laufen im `read_only: true` Modus, was das Schreiben auf das lokale Dateisystem technisch unterbindet.
 
 | *7. Portbindung* +
-Export via Port
-| [green]#*ERFÜLLT*#
-| Services (Micronaut/SvelteKit) bringen eigene Server mit und exportieren Ports (8080, 3000).
+Port Export
+a|
+Die Dienste sind völlig eigenständig und exportieren ihre Dienste per HTTP Port Binding.
+
+* **Backend:** Exportiert auf Port `8080`.
+* **Frontend:** Exportiert auf Port `3000`.
+* Ein Reverse Proxy (Traefik) routet die Anfragen lediglich weiter, die App selbst läuft nicht „in“ einem App-Server, sondern bringt ihren Server mit.
 
 | *8. Nebenläufigkeit* +
-Skalierung via Prozesse
-| [green]#*ERFÜLLT*#
-| Skalierung über Replicas möglich, da Prozesse zustandslos sind.
+Skalierung via Prozess-Modell
+| Da die Prozesse stateless sind (Faktor 6), kann die Last durch Starten weiterer Container-Instanzen horizontal skaliert werden. Docker Compose und Traefik (Loadbalancer) unterstützen dies nativ durch die Labels `traefik.http.services.api.loadbalancer.server.port=8080`.
 
-| *9. Wegwerfbarkeit* +
-Schneller Start/Stop
-| [green]#*ERFÜLLT*#
-| Micronaut ist auf schnellen Start optimiert; Container sind flüchtig konzipiert.
+| *9. Einweggebrauch* +
+Disposability
+a|
+Die Container sind auf schnellen Start und problemlosen Stopp ausgelegt.
+
+* **Start:** Micronaut (Framework) ist für extrem schnelle Startzeiten optimiert.
+* **Stopp:** Die Container empfangen `SIGTERM` von Docker und fahren sauber herunter.
+* Die Instanzen sind „wegwerfbar“; ein Neustart oder Absturz führt nicht zu Datenverlust.
 
 | *10. Dev-Prod-Parität* +
-Umgebungen angleichen
-| [yellow]#*WARNUNG*#
-| _Teilweise erfüllt._ Lokal wird oft `mvn`/`npm` direkt genutzt statt der Docker-Container. Das weicht von Prod ab. +
-_Empfehlung:_ Entwicklung primär via `docker-compose` durchführen.
+Gleiche Umgebungen
+| Entwicklung (Local), Test und Produktion nutzen dieselben Docker-Images und fast identische `docker-compose`-Files (`local`, `test`, `prod`).
+
+Beispiel: Die Datenbank-Migrationen (Flyway) laufen lokal exakt so ab wie auf Prod, was Schema-Abweichungen verhindert (siehe Individuelles Szenario „DB Migration“).
 
 | *11. Logs* +
-Logs als Event-Streams
-| [green]#*ERFÜLLT*#
-| App schreibt auf `STDOUT`; Docker fängt Stream ab. +
-_Beleg:_ `ConsoleAppender` in `logback.xml`.
+Logs als Event-Stream
+| Die Applikation schreibt Logs nicht in Dateien, sondern direkt nach `stdout`/`stderr`. Die Laufzeitumgebung ist verantwortlich für die Verwaltung dieses Streams. Es ist keine Log-Rotation innerhalb der App nötig.
+
+Nachweis: Keine Log-Volumes in `docker_prod.yml`, Standard Logback Konfiguration.
 
 | *12. Admin-Prozesse* +
 One-off Prozesse
-| [red]#*FEHLT*#
-| _Nicht erfüllt._ DB-Migration läuft automatisch beim App-Start (`schema-generate`), nicht als separater Prozess. +
-_Empfehlung:_ Migrationstool (Flyway) als Init-Container einführen.
+| Datenbank-Migrationen werden mittels **Flyway** verwaltet und sind als versionierte SQL-Skripte Teil des Codes. Die Migration läuft kontrolliert beim Start der Container als „One-off“-Task ab, bevor der Traffic freigegeben wird. Manuelle SQL-Eingriffe auf dem Server sind nicht notwendig.
 |===
-
-=== Fazit & Massnahmen (für Abgabe entfernen)
-
-Du hast völlig recht, Skepsis war angebracht. Wir haben zwei "Baustellen":
-
-1.  **Faktor 12 (Admin-Prozesse):** Dies ist der kritischste Punkt.
-* *Lösung:* Migrationstool (Flyway) einführen und Migrationen als separaten CI-Job oder Init-Container ausführen.
-
-2.  **Faktor 10 (Dev-Prod-Parität):** Hier gibt es Abweichungen im Workflow.
-* *Lösung:* Die `README.md` sollte primär die Entwicklung _innerhalb_ von Docker (z.B. via `docker compose -f docker_test.yml up`) propagieren, statt der lokalen Java/Node-Befehle, oder DevContainer nutzen, damit die lokale Umgebung der Produktion gleicht.
