@@ -34,6 +34,7 @@ CI-Pipelines werden für alle Branches ausgeführt (Build & Test). Deployments a
 * **Produktions-Umgebung:** `http://srv-021.devops.ls.eee.intern/`
 * **Monitoring (Grafana):** `http://srv-003.devops.ls.eee.intern/grafana`
 * **Metriken (Prometheus):** `http://srv-003.devops.ls.eee.intern/prometheus`
+* **Metriken (Blackbox Exporter):** `http://srv-003.devops.ls.eee.intern/blackbox`
 
 === Verwendete Technologien und Tools
 
@@ -75,6 +76,7 @@ Die Auswahl der Technologien erfolgte mit dem Ziel, eine typensichere und contai
 * **Prometheus:** Sammlung und Speicherung der von der Datenbank bereitgestellten Metriken.
 * **Grafana:** Visualisierung der Datenbank-Auslastung in Dashboards.
 * **Postgres Exporter:** Export der internen Datenbank-Kennzahlen in ein für Prometheus lesbares Format.
+* **Blackbox Exporter:** Export der Up-time (HTTP) Metriken vom Frontend und Backend.
 * **Health Checks:** Native Docker Healthchecks – Überprüfung der Datenbankverfügbarkeit, um sicherzustellen, dass abhängige Services erst starten, wenn die Datenbank bereit ist.
 
 === Erfahrungen / Lessons Learned
@@ -112,11 +114,11 @@ Während die Backend-Integration von Unleash (Java) reibungslos verlief, konnten
 ==== Konkrete Verbesserungsmassnahmen für künftige Projekte
 
 * **Einführung von Centralized Logging:**
-Aktuell haben wir ein exzellentes Metrik-Monitoring (Prometheus), aber die Logs müssen noch per `docker logs` auf den jeweiligen Servern eingesehen werden.
-Für ein Folgestack würden wir **Grafana Loki** einführen, um Logs genauso zentral zu aggregieren wie Metriken. Dies würde die Fehleranalyse drastisch beschleunigen, da man Logs von Test und Prod an einem Ort durchsuchen könnte.
+Aktuell haben wir ein Metrik-Monitoring (Prometheus), aber die Logs müssen noch per `docker logs` auf den jeweiligen Servern eingesehen werden.
+Für ein Folgestack würden wir **Grafana Loki** einführen, um Logs genauso zentral zu aggregieren wie Metriken. Dies würde die Fehleranalyse beschleunigen, da man Logs von Test und Prod an einem Ort durchsuchen könnte.
 
 * **Ausbau der Metriken:**
-Aktuell beschränkt sich unser Monitoring primär auf die Datenbank (via `postgres_exporter`) und den Status der Container.
+Aktuell beschränkt sich unser Monitoring primär auf die Datenbank (via `postgres_exporter`) und den HTTP Status der Applikationen.
 Für die Zukunft wäre die Aktivierung von **Micrometer** im Micronaut-Backend sinnvoll, um interne Applikations-Metriken zu erfassen. Dazu gehören:
 ** **JVM-Metriken:** Heap Memory Usage, Garbage Collection Zeiten und Thread-Auslastung.
 ** **HTTP-Metriken:** Request-Durchsatz, Latenzzeiten und Fehlerraten (HTTP 5xx) pro Endpunkt.
