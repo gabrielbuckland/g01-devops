@@ -33,6 +33,18 @@ services:
       - "traefik.http.middlewares.prometheus-strip.stripprefix.prefixes=/prometheus"
       - "traefik.http.services.prometheus.loadbalancer.server.port=9090"
 
+  blackbox-exporter:
+    image: prom/blackbox-exporter:v0.25.0
+    container_name: g01-monitoring-blackbox
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.blackbox.entrypoints=web"
+      - "traefik.http.routers.blackbox.rule=PathPrefix(`/blackbox`)"
+      - "traefik.http.routers.blackbox.middlewares=blackbox-strip"
+      - "traefik.http.middlewares.blackbox-strip.stripprefix.prefixes=/blackbox"
+      - "traefik.http.services.blackbox.loadbalancer.server.port=9115"
+
   grafana:
     image: grafana/grafana-oss:latest
     container_name: g01-monitoring-grafana
