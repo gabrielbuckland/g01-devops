@@ -79,3 +79,20 @@ services:
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
     restart: unless-stopped
+
+  postgres_exporter:
+    image: quay.io/prometheuscommunity/postgres-exporter:v0.15.0
+    container_name: g01-form-postgres-exporter
+    restart: unless-stopped
+    environment:
+      - DATA_SOURCE_NAME=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?sslmode=disable
+    depends_on:
+      postgres:
+        condition: service_healthy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.pg-exporter.entrypoints=web"
+      - "traefik.http.routers.pg-exporter.rule=PathPrefix(`/pg-exporter`)"
+      - "traefik.http.routers.pg-exporter.middlewares=pg-strip"
+      - "traefik.http.middlewares.pg-strip.stripprefix.prefixes=/pg-exporter"
+      - "traefik.http.services.pg-exporter.loadbalancer.server.port=9187"
