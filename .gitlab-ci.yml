@@ -52,3 +52,6 @@ deploy-monitoring:
 
     - echo "Prometheus UI:"
     - echo "http://srv-003.devops.ls.eee.intern/prometheus"
+
+    - echo "Blackbox Exporter UI:"
+    - echo "http://srv-003.devops.ls.eee.intern/blackbox"
