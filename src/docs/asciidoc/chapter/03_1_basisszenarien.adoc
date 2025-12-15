@@ -12,18 +12,18 @@
 ==== 1. Einfacher Change-Request
 
 Ein Change-Request beginnt typischerweise mit der Erstellung eines neuen Branches.
-Der Branch beeinhaltet in der commit Nachricht oder im Branchnamen die Ticket-Nr.
+Der Branch beeinhaltet in der Commit Nachricht oder im Branchnamen die Ticket-Nr.
 z.B. feature/introduce-type-safety-#412
 
 Die Pipeline unterscheidet dabei folgende Typen:
 
-* *feature/* – neue Funktionalität
-* *bugfix/* – Fehlerbehebung
-* *hotfix/* – dringende Korrektur
-* *main* – stabiler Hauptbranch
+* *`feature/`*: neue Funktionalität
+* *`bugfix/`*: Fehlerbehebung
+* *`hotfix/`*: dringende Korrektur
+* *`main`*: stabiler Hauptbranch
 
 Sobald auf einem dieser Branches ein Commit gepusht wird, startet die Pipeline automatisch (ausser bei Tags).
-Der main branch ist wie üblich geschützt.
+Der `main`-Branch ist wie üblich geschützt.
 
 
 ==== 2. Umsetzung (Build & Vorbereitung)
@@ -99,7 +99,7 @@ Der Ablauf ist analog zum Test-Deployment:
 * Laden der neuen Images
 * Start mit Health-Wait
 
-Die Entscheidung, wann ein Change produktiv geht, wird bewusst manuell getroffen – typischerweise nach erfolgreicher Abnahme auf der Testumgebung.
+Die Entscheidung, wann ein Change produktiv geht, wird bewusst manuell getroffen - typischerweise nach erfolgreicher Abnahme auf der Testumgebung.
 
 ==== Zusammenfassung des Lebenszyklus
 
@@ -189,7 +189,7 @@ git config --global user.email "vorname.nachname@stud.hslu.ch"
 
 . Container-Engine installieren und Test-Container starten:
 .. Folge der offiziellen Installationsanleitung unter https://docs.docker.com/engine/install[https://docs.docker.com/engine/install], um Docker zu installieren.
-.. Docker installation testen:
+.. Docker-Installation testen:
 +
 [source,bash]
 ----

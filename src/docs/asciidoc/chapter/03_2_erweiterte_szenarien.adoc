@@ -39,7 +39,7 @@ Das Test-Deployment verwendet die aggregierten Regeln:
        - !reference [ .is_hotfix_branch:manual, rules ]
    ----
 
-   Fuer Hotfix-Branches bedeutet dies:
+   Für Hotfix-Branches bedeutet dies:
 
 * Deploy auf Test ist **manuell** (Button im Pipeline-UI, `when: manual`).
 * So kann der Bugfix in einer kontrollierten Testumgebung geprüft werden, bevor er in Produktion geht.
@@ -52,7 +52,7 @@ Vor dem Merge und vor dem Produktions-Deployment sollte mindestens erfolgen:
 
 ==== Schnelles, aber kontrolliertes Deployment
 
-Die neuen Rules sorgen dafuer, dass es *kein automatisches* Deployment auf Produktion gibt – weder fuer `main` noch fuer `hotfix`:
+Die neuen Rules sorgen dafür, dass es *kein automatisches* Deployment auf Produktion gibt - weder für `main` noch für `hotfix`:
 
 [source,yaml]
 ----

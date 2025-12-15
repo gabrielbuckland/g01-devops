@@ -16,7 +16,7 @@
 </plugin>
 ----
 
-NOTE: Den Image-Tag enthält die Container-Registry-URL und den Image-Namen des Docker-Images.
+NOTE: Der Image-Tag enthält die Container-Registry-URL und den Image-Namen des Docker-Images.
 
 === 2. Docker zur CI/CD Pipeline hinzufügen
 
@@ -57,7 +57,7 @@ Fügen Sie dies in die `.gitlab-ci.yml`-Datei im Stammverzeichnis Ihres Reposito
 
 === 3. Produktions-Docker-Compose Datei erstellen
 
-Erstelle das `docker_prod.yml` File, welches folgendes enthählt:
+Erstelle die `docker_prod.yml` Datei, welches folgendes enthählt:
 
  * Ein `postgres` Service.
  * Der Anwendungsdienst welcher das erstellte Docker-Image nutzt.

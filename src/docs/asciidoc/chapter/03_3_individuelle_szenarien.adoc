@@ -16,7 +16,7 @@ Für das Projekt `g01-form` ist der Einsatz von Flyway besonders relevant, da ei
 
 Eine Schema-Änderung erfolgt in einem klar definierten, durchgängigen Prozess. Zunächst erstellt ein Entwickler ein neues SQL-Migrationsskript im Ordner `src/main/resources/db/migration`. Die Benennung folgt der Konvention `V<Version>__<Beschreibung>.sql`, beispielsweise `V1__create_form_table.sql`.
 
-Beim lokalen Start des Backends über Docker Compose (`docker_local.yml`) wird dieses Skript automatisch durch Flyway gegen die lokale PostgreSQL-Datenbank ausgeführt. Anschliessend wird das Skript gemeinsam mit dem restlichen Backend-Code ins Git-Repository gepusht und im CI-Prozess als Teil des Backend-Artefakts (JAR bzw. Docker Image) gebaut.
+Beim lokalen Start des Backends über Docker Compose (`docker_local.yml`) wird dieses Skript automatisch durch Flyway gegen die lokale PostgreSQL-Datenbank ausgeführt. Anschliessend wird das Skript gemeinsam mit dem restlichen Backend-Code ins Git-Repository gepusht und im CI-Prozess als Teil des Backend-Artefakts (JAR bzw. Docker-Image) gebaut.
 
 Beim Deployment auf die Test- oder Produktionsumgebung prüft Flyway beim Start des neuen Backend-Containers die Tabelle `flyway_schema_history`. Erkennt Flyway ein Migrationsskript im Classpath, das in der Datenbank noch nicht angewendet wurde, wird dieses automatisch ausgeführt. Erst wenn alle Migrationen erfolgreich abgeschlossen sind, startet die Applikation vollständig und der Healthcheck wird grün.
 
