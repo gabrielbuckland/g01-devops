@@ -7,7 +7,7 @@ Das Repository ist in zwei eigenständige Hauptprojekte unterteilt, um die Anwen
 1.  **`g01-form`**: Die eigentliche Anwendungs-Suite.
 * **`backend/`**: Enthält den Micronaut Java-Code (Controller, Services, Entities).
 * **`frontend/`**: Enthält die SvelteKit-Anwendung.
-* **Root-Verzeichnis**: Beinhaltet die `docker-compose` Dateien (`local`, `test`, `prod`) und CI/CD-Konfigurationen für das Deployment der Applikation.
+* **Root-Verzeichnis**: Beinhaltet die `docker-compose`-Dateien (`local`, `test`, `prod`) und CI/CD-Konfigurationen für das Deployment der Applikation.
 
 2.  **`g01-monitoring`**: Der unabhängige Monitoring-Stack.
 * Beinhaltet Konfigurationen für **Prometheus** und **Grafana**.
@@ -76,7 +76,7 @@ Die Auswahl der Technologien erfolgte mit dem Ziel, eine typensichere und contai
 * **Prometheus:** Sammlung und Speicherung der von der Datenbank bereitgestellten Metriken.
 * **Grafana:** Visualisierung der Datenbank-Auslastung in Dashboards.
 * **Postgres Exporter:** Export der internen Datenbank-Kennzahlen in ein für Prometheus lesbares Format.
-* **Blackbox Exporter:** Export der Uptime (HTTP) Metriken vom Frontend und Backend.
+* **Blackbox Exporter:** Export der Uptime (HTTP-)Metriken vom Frontend und Backend.
 * **Health Checks:** Native Docker Healthchecks - Überprüfung der Datenbankverfügbarkeit, um sicherzustellen, dass abhängige Services erst starten, wenn die Datenbank bereit ist.
 
 === Erfahrungen / Lessons Learned
@@ -98,8 +98,8 @@ Dadurch bleibt die Überwachung auch dann verfügbar, wenn die Applikations-Infr
 
 ==== Wo gab es Probleme
 
-* **Traefik Label-Komplexität:**
-Die Konfiguration des Reverse Proxies **Traefik** über Docker Labels in den `docker-compose.yml` Dateien ist zwar mächtig, aber fehleranfällig.
+* **Traefik-Label-Komplexität:**
+Die Konfiguration des Reverse Proxies **Traefik** über Docker Labels in den `docker-compose.yml`-Dateien ist zwar mächtig, aber fehleranfällig.
 Besonders die Verkettung von Middlewares (z.B. für das Strippen von Pfad-Präfixen wie `/api` oder `/pg-exporter`) führte initial zu 404-Fehlern, da die Reihenfolge und Syntax der Labels exakt stimmen muss.
 
 * **Management der Umgebungsvariablen:**
@@ -118,7 +118,7 @@ Aktuell haben wir ein Metrik-Monitoring (Prometheus), aber die Logs müssen noch
 Für ein Folgestack würden wir **Grafana Loki** einführen, um Logs genauso zentral zu aggregieren wie Metriken. Dies würde die Fehleranalyse beschleunigen, da man Logs von Test und Prod an einem Ort durchsuchen könnte.
 
 * **Ausbau der Metriken:**
-Aktuell beschränkt sich unser Monitoring primär auf die Datenbank (via `postgres_exporter`) und den HTTP Status der Applikationen.
+Aktuell beschränkt sich unser Monitoring primär auf die Datenbank (via `postgres_exporter`) und den HTTP-Status der Applikationen.
 Für die Zukunft wäre die Aktivierung von **Micrometer** im Micronaut-Backend sinnvoll, um interne Applikations-Metriken zu erfassen. Dazu gehören:
 ** **JVM-Metriken:** Heap Memory Usage, Garbage Collection Zeiten und Thread-Auslastung.
 ** **HTTP-Metriken:** Request-Durchsatz, Latenzzeiten und Fehlerraten (HTTP 5xx) pro Endpunkt.

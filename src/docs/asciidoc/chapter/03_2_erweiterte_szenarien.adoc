@@ -1,7 +1,5 @@
 == Erweiterte Szenarien
 
-Kurze Einleitung: Welche Szenarien wurden konkret umgesetzt und warum.
-
 === Notfall-Bugfix in Produktion
 
 * Erkennung des Problems (Monitoring, Incident-Report)
@@ -23,7 +21,7 @@ Dabei passieren folgende Schritte:
 * Frontend-Image wird gebaut (Docker Build, Tag = `CI_COMMIT_SHA`)
 
 2. *Test-Stage*
-* SAST-Job läuft im `test`-Stage (Security Scan)
+* SAST-Job läuft in der `test`-Stage (Security-Scan)
 * Hotfix-Jobs verwenden `allow_failure: true`, damit in einem Notfall nicht alles strikt blockiert wird, aber dennoch Feedback vorliegt.
 
 3. *Optionale Deployments auf Test*
@@ -47,7 +45,7 @@ Das Test-Deployment verwendet die aggregierten Regeln:
 4. *Freigaben*
 Vor dem Merge und vor dem Produktions-Deployment sollte mindestens erfolgen:
 
-* technisches Review (so weit unter Zeitdruck möglich)
+* technisches Review (soweit unter Zeitdruck möglich)
 * Entscheidung durch verantwortliche Rolle (z.B. Incident-Manager, Product Owner, Betrieb)
 
 ==== Schnelles, aber kontrolliertes Deployment
@@ -66,7 +64,7 @@ Das heisst konkret:
 
 * Nur Pipelines auf `main` oder `hotfix/...` sehen einen *Deploy-to-Prod*-Job.
 * Dieser Job ist immer **manuell** (`when: manual`).
-* Feature- und Bugfix-Branches können **nicht** direkt auf Produktion deployen.
+* Feature- und Bugfix-Branches können **nicht** direkt auf Produktion deployt werden.
 
 Es gibt damit zwei typische Varianten für einen Notfall-Bugfix:
 
@@ -103,14 +101,14 @@ In beiden Fällen:
 * Artefakte (Runbook, Post-Mortem, verlinkte MRs)
 * Lessons Learned / Präventive Massnahmen
 
-=== Feature-Implementation mit Feature-Toggles
+=== Feature-Implementierung mit Feature-Toggles
 
 Feature-Toggles trennen Deployment von Release. Neue Features werden produktiv ausgerollt, aber erst später per Toggle für einzelne Nutzergruppen aktiviert. Das reduziert Risiko (kein Big Bang), erlaubt Canary-Rollouts und macht Rollbacks oft überflüssig (Toggle zurücksetzen statt Redeploy).
 
 ==== Technische Umsetzung (GitLab Feature Flags mit Unleash)
 
 * Flags werden in GitLab unter *Deploy > Feature Flags* angelegt. 
-** Pro Flag wird ein Namen vergeben (z.B. `checkout-v2`) und ein Ziel-Environment (`test`, `prod`).
+** Pro Flag wird ein Name vergeben (z.B. `checkout-v2`) und ein Ziel-Environment (`test`, `prod`).
 ** Es können optionale Strategien definiert werden (z.B. prozentualer Rollout, Nutzer-IDs).
 * GitLab stellt eine Unleash-kompatible API bereit. Der Client in der Micronaut-App nutzt folgende Konfiguration (als env vars definiert, welche die properties setzen):
 ** `UNLEASH_URL` (Unleash-Endpoint aus GitLab, z.B. `https://gitlab.switch.ch/api/v4/feature_flags/unleash/<project-id>`)

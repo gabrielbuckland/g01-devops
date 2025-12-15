@@ -8,7 +8,7 @@ Dieses Szenario beschreibt die Integration und Nutzung von Flyway für das versi
 
 ==== Kontext und Begründung
 
-In einer modernen DevOps-Umgebung muss die Datenbank-Infrastruktur genauso flexibel und versionierbar sein wie der Applikationscode („Infrastructure as Code“). Manuelle SQL-Updates sind fehleranfällig, schwer nachvollziehbar und lassen sich kaum reproduzierbar zwischen Umgebungen übertragen.
+In einer modernen DevOps-Umgebung muss die Datenbank-Infrastruktur genauso flexibel und versionierbar sein wie der Applikationscode („Infrastructure as Code“). Manuelle SQL-Updates sind fehleranfällig, schwer nachvollziehbar und lassen sich zwischen Umgebungen kaum reproduzieren.
 
 Für das Projekt `g01-form` ist der Einsatz von Flyway besonders relevant, da eine strikte Trennung von Code und State im Sinne der 12-Factor-App angestrebt wird. Zudem muss die Datenbank beim Deployment neuer Backend-Versionen automatisch auf den aktuellen Stand gebracht werden. Nur so kann sichergestellt werden, dass lokale Entwicklungsumgebungen exakt dasselbe Schema verwenden wie die Test- und Produktionsumgebungen.
 

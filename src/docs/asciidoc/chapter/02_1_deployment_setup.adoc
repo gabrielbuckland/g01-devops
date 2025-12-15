@@ -18,7 +18,7 @@
 
 NOTE: Der Image-Tag enthält die Container-Registry-URL und den Image-Namen des Docker-Images.
 
-=== 2. Docker zur CI/CD Pipeline hinzufügen
+=== 2. Docker zur CI/CD-Pipeline hinzufügen
 
 Fügen Sie eine GitLab CI/CD-Pipeline-Definition hinzu, die das Docker-Image erstellt und mithilfe des Jib-Plugins in die Registry hochlädt.
 
@@ -55,12 +55,12 @@ docker:
 
 Fügen Sie dies in die `.gitlab-ci.yml`-Datei im Stammverzeichnis Ihres Repositorys ein.
 
-=== 3. Produktions-Docker-Compose Datei erstellen
+=== 3. Produktions-Docker-Compose-Datei erstellen
 
-Erstelle die `docker_prod.yml` Datei, welches folgendes enthählt:
+Erstelle die `docker_prod.yml`-Datei, die Folgendes enthält:
 
  * Ein `postgres` Service.
- * Der Anwendungsdienst welcher das erstellte Docker-Image nutzt.
+ * Der Anwendungsdienst, der das erstellte Docker-Image nutzt.
 
 [source,yaml]
 ----
@@ -123,9 +123,9 @@ services:
 ----
 
 
-=== 4. Erstelle ein `.env` File
+=== 4. Erstelle ein `.env`-File
 
-Erstelle ein `.env` File, um die Umgebungsvariablen für das Docker Compose Setup zu speichern
+Erstelle ein `.env`-File, um die Umgebungsvariablen für das Docker-Compose-Setup zu speichern:
 
 [source,bash]
 ----
@@ -137,9 +137,3 @@ JDBC_URL=jdbc:postgresql://postgres:5432/${POSTGRES_DB}
 ----
 
 IMPORTANT: Ersetze die Werte mit sicheren Credentials.
-
-
-
-
-
-

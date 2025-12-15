@@ -11,9 +11,7 @@
 
 ==== 1. Einfacher Change-Request
 
-Ein Change-Request beginnt typischerweise mit der Erstellung eines neuen Branches.
-Der Branch beeinhaltet in der Commit Nachricht oder im Branchnamen die Ticket-Nr.
-z.B. feature/introduce-type-safety-#412
+Ein Change-Request beginnt typischerweise mit der Erstellung eines neuen Branches. Der Branch beinhaltet die Ticket-Nr. in der Commit-Nachricht oder im Branch-Namen, z.B. `feature/introduce-type-safety-#412`.
 
 Die Pipeline unterscheidet dabei folgende Typen:
 
@@ -36,22 +34,22 @@ Hier werden Backend und Frontend automatisch gebaut:
 * Wird für jeden Branch ausgeführt.
 * Baut das Artefakt mittels Maven und Jib.
 * Erzeugt ein Docker-Image, getaggt mit dem Commit-SHA.
-* Push zum Container Registry.
+* Push in die Container Registry.
 
 ===== Frontend Build
 
 * Analog zum Backend-Build.
-* Docker-Image wird gebaut und ins Registry gepusht.
+* Docker-Image wird gebaut und in die Registry gepusht.
 
-Diese Build-Prozesse bilden die Grundlage für spätere Test- und Deployments, da die Images auf Test- und Produktionssystemen wiederverwendet werden.
+Diese Build-Prozesse bilden die Grundlage für spätere Tests und Deployments, da die Images auf Test- und Produktionssystemen wiederverwendet werden.
 
 ==== 3. Q-Gate
 
 Das Q-Gate definiert, ob ein Change sauber gebaut und grundlegend geprüft wurde.
 Aus Sicht dieser Pipeline besteht das Q-Gate aus:
 
-* erfolgreichem Build inkl. der Unit- und Integrationstests von Backend und Frontend
-* erfolgreicher SAST Analyse
+* erfolgreichem Build inkl. Unit- und Integrationstests von Backend und Frontend
+* erfolgreicher SAST-Analyse
 
 Je nach Branchtyp ist auch relevant, ob ein Deployment manuell bestätigt werden muss (z.B. für Feature, Bugfix, Hotfix).
 Damit ist das Q-Gate ein technischer Qualitätsfilter, bevor ein Merge-Request erstellt und bewertet wird.
@@ -69,19 +67,19 @@ Für den Merge in den *main* Branch ist wesentlich, dass:
 
 * der Change sauber gebaut wurde
 * alle Testergebnisse erfolgreich sind
-* Reviews und Freigaben abgeschlossen sind (4 Augenprinzip)
+* Reviews und Freigaben abgeschlossen sind (Vier-Augen-Prinzip)
 
 Sobald der Merge erfolgt, startet eine neue Pipeline auf *main*, die als Grundlage für die Delivery dient.
 
 ==== 5. Delivery (Bereitstellung auf Testumgebung)
 
 Jeder Change, der in einem Feature-, Bugfix- oder Hotfix-Branch stattfindet, kann manuell auf der Testumgebung deployed werden.
-Alternativ kann der Hotfix branch auch manuell auf Prod deployen werden
+Alternativ kann der Hotfix-Branch auch manuell auf Prod deployt werden.
 Führt man den Merge in den *main* Branch durch, wird das Test-Deployment *automatisch* angestossen.
 
 Das Deployment auf Test:
 
-* erzeugt eine `.env.test` Datei mit Test-Passwörtern und DB-Informationen
+* erzeugt eine `.env.test`-Datei mit Test-Passwörtern und DB-Informationen
 * lädt die passenden Docker-Images (beide Services nutzen das Commit-SHA)
 * startet die Anwendung via `docker compose`
 * lässt das System mittels `--wait` hochfahren
@@ -94,8 +92,8 @@ Das Deployment auf die Produktionsumgebung erfolgt kontrolliert und ist grundsä
 
 Der Ablauf ist analog zum Test-Deployment:
 
-* Erstellung der `.env.prod` Datei
-* Stop und Neustart der Compose-Services
+* Erstellung der `.env.prod`-Datei
+* Stopp und Neustart der Compose-Services
 * Laden der neuen Images
 * Start mit Health-Wait
 
@@ -111,7 +109,7 @@ Die Entscheidung, wann ein Change produktiv geht, wird bewusst manuell getroffen
 |Branch wird erstellt, Pipeline startet automatisch.
 
 |Umsetzung
-|Build von Backend und Frontend, SAST Sicherheitsprüfung.
+|Build von Backend und Frontend, SAST-Sicherheitsprüfung.
 
 |Q-Gate
 |Build und Tests müssen erfolgreich sein, Branch-Regeln müssen passen.
@@ -198,7 +196,7 @@ docker run --rm hello-world
 
 . Java 21 installieren (z.B. OpenJDK/Temurin 21) und Version prüfen:
 .. Folge der offiziellen Installationsanleitung unter https://adoptium.net/temurin/releases/?version=21[https://adoptium.net/temurin/releases/?version=21], um JDK 21 zu installieren.
-.. Prüfe die installierte java version:
+.. Prüfe die installierte Java-Version:
 +
 [source,bash]
 ----
@@ -207,7 +205,7 @@ java -version
 
 . Maven installieren und Version prüfen:
 .. Folge der offiziellen Installationsanleitung unter https://maven.apache.org/install.html[https://maven.apache.org/install.html], um Maven zu installieren.
-.. Prüfe die installierte Maven version:
+.. Prüfe die installierte Maven-Version:
 +
 [source,bash]
 ----
@@ -233,7 +231,7 @@ npm -v
 
 ==== Projekt auschecken und lokal starten
 
-. Haupt-Repository clonen:
+. Haupt-Repository klonen:
 +
 [source,bash]
 ----
@@ -248,7 +246,7 @@ cd g01-form
 docker compose -f docker_local.yml up -d
 ----
 
-. Backend-Abhängigkeiten installieren und Backend bauen und ausführen:
+. Backend-Abhängigkeiten installieren, Backend bauen und ausführen:
 +
 [source,bash]
 ----
@@ -257,7 +255,7 @@ mvn package
 MICRONAUT_ENVIRONMENTS=local java -jar ./target/g01-form-0.1.jar
 ----
 
-. Frontend-Abhängigkeiten installieren und Frontend bauen und ausführen:
+. Frontend-Abhängigkeiten installieren, Frontend bauen und ausführen:
 +
 [source,bash]
 ----
@@ -293,11 +291,11 @@ cd ../frontend
 npm test
 ----
 
-. Commiten mit aussagekräftiger Nachricht:
+. Committen mit aussagekräftiger Nachricht:
 +
 [source,bash]
 ----
-git commit -am "feat: <kurze beschreibung>"
+git commit -am "feat: <kurze Beschreibung>"
 ----
 . Branch pushen und Merge-Request öffnen.
 
@@ -393,7 +391,7 @@ Nachweis: Die Backend-Container laufen im `read_only: true` Modus, was das Schre
 | *7. Portbindung* +
 Port Export
 a|
-Die Dienste sind völlig eigenständig und exportieren ihre Dienste per HTTP Port Binding.
+Die Dienste sind völlig eigenständig und exportieren ihre Dienste per HTTP-Port-Binding.
 
 * **Backend:** Exportiert auf Port `8080`.
 * **Frontend:** Exportiert auf Port `3000`.
@@ -401,7 +399,7 @@ Die Dienste sind völlig eigenständig und exportieren ihre Dienste per HTTP Por
 
 | *8. Nebenläufigkeit* +
 Skalierung via Prozess-Modell
-| Da die Prozesse stateless sind (Faktor 6), kann die Last durch Starten weiterer Container-Instanzen horizontal skaliert werden. Docker Compose und Traefik (Loadbalancer) unterstützen dies nativ durch die Labels `traefik.http.services.api.loadbalancer.server.port=8080`.
+| Da die Prozesse stateless sind (Faktor 6), kann die Last durch Starten weiterer Container-Instanzen horizontal skaliert werden. Docker Compose und Traefik (Load-Balancer) unterstützen dies nativ durch die Labels `traefik.http.services.api.loadbalancer.server.port=8080`.
 
 | *9. Einweggebrauch* +
 Disposability
@@ -420,7 +418,7 @@ Beispiel: Die Datenbank-Migrationen (Flyway) laufen lokal exakt so ab wie auf Pr
 
 | *11. Logs* +
 Logs als Event-Stream
-| Die Applikation schreibt Logs nicht in Dateien, sondern direkt nach `stdout`/`stderr`. Die Laufzeitumgebung ist verantwortlich für die Verwaltung dieses Streams. Es ist keine Log-Rotation innerhalb der App nötig.
+| Die Applikation schreibt Logs nicht in Dateien, sondern direkt nach `stdout`/`stderr`. Die Laufzeitumgebung ist verantwortlich für die Verwaltung dieses Streams. Es ist keine Logrotation innerhalb der App nötig.
 
 Nachweis: Keine Log-Volumes in `docker_prod.yml`, Standard Logback Konfiguration.
 
