@@ -14,8 +14,8 @@ Dabei passieren folgende Schritte:
 * Frontend-Image wird gebaut (Docker Build, Tag = `CI_COMMIT_SHA`)
 
 2. *Test-Stage*
-* SAST-Job läuft in der `test`-Stage (Security-Scan)
-* Hotfix-Jobs verwenden `allow_failure: true`, damit in einem Notfall nicht alles strikt blockiert wird, aber dennoch Feedback vorliegt.
+* SAST-Job Frontend- und Backend-Tests laufen in der `test`-Stage
+* Hotfix-Jobs verwenden `allow_failure: true` bei den Frontend- und Backend-Tests, damit in einem Notfall nicht alles strikt blockiert wird, aber dennoch Feedback vorliegt.
 
 3. *Optionale Deployments auf Test*
 Das Test-Deployment verwendet die aggregierten Regeln:
@@ -38,7 +38,7 @@ Das Test-Deployment verwendet die aggregierten Regeln:
 4. *Freigaben*
 Vor dem Merge und vor dem Produktions-Deployment sollte mindestens erfolgen:
 
-* technisches Review (soweit unter Zeitdruck möglich)
+* technisches Review
 * Entscheidung durch verantwortliche Rolle (z.B. Incident-Manager, Product Owner, Betrieb)
 
 ==== Schnelles, aber kontrolliertes Deployment
@@ -53,7 +53,7 @@ Die neuen Rules sorgen dafür, dass es *kein automatisches* Deployment auf Produ
     - !reference [ .is_hotfix_branch:manual, rules ]
 ----
 
-Das heisst konkret:
+Das heisst:
 
 * Nur Pipelines auf `main` oder `hotfix/...` sehen einen *Deploy-to-Prod*-Job.
 * Dieser Job ist immer **manuell** (`when: manual`).
@@ -66,7 +66,7 @@ Es gibt damit zwei typische Varianten für einen Notfall-Bugfix:
 * Optional: manuelles Deploy auf Test (Absicherung).
 * Danach: manueller Start des Prod-Deploy-Jobs aus derselben Pipeline
 (durch `.is_hotfix_branch:manual` in `.prod_deployment_rules`).
-* Vorteil: extrem schnell, direkt aus dem Notfall-Branch.
+* Vorteil: schnell, direkt aus dem Notfall-Branch.
 
 2. **Hotfix über `main` stabilisieren und dann deployen**
 * Hotfix wird nach kurzer Prüfung in `main` gemergt.
