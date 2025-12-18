@@ -1,14 +1,5 @@
 == Basisszenarien
 
-=== Einfacher Change-Request
-
-* Eingang des Change-Requests (Ticket-System, Template)
-* Umsetzung im Branch (inkl. Referenz auf Ticket)
-* Q-Gate (Code-Review, Tests, Quality-Checks)
-* Merge-Request (inkl. erforderlicher Checks)
-* Delivery und Deployment (Pfad bis in Zielumgebung beschreiben)
-
-
 ==== 1. Einfacher Change-Request
 
 Ein Change-Request beginnt typischerweise mit der Erstellung eines neuen Branches. Der Branch beinhaltet die Ticket-Nr. in der Commit-Nachricht oder im Branch-Namen, z.B. `feature/introduce-type-safety-#412`.

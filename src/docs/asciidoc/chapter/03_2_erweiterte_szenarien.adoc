@@ -1,12 +1,5 @@
 == Erweiterte Szenarien
 
-=== Notfall-Bugfix in Produktion
-
-* Erkennung des Problems (Monitoring, Incident-Report)
-* Vorgehen für Hotfix (Branching, Tests, Freigaben)
-* Schnelles, aber kontrolliertes Deployment
-* Nachbereitung (Post-Mortem, Dokumentation der Ursache)
-
 ==== Vorgehen für Hotfix (Branching, Tests, Freigaben)
 
 Der technische Ablauf für einen Notfall-Bugfix startet mit einem eigenen Hotfix-Branch:
@@ -120,14 +113,6 @@ Im Incident/Ticket dokumentieren:
 * Auslöser/Kriterium für Rollback
 * Verifikation: Healthchecks, Smoke-Test, Monitoring-Status
 * Nächste Schritte: Root Cause, Fix-Branch (hotfix/bugfix), erneuter Rollout über Test -> Prod
-
-
-=== Nachvollziehbare Behandlung eines Incidents
-
-* Incident-Lifecycle (Erkennung, Klassifikation, Bearbeitung, Abschluss)
-* Beteiligte Rollen (Dev, Ops, Product Owner)
-* Artefakte (Runbook, Post-Mortem, verlinkte MRs)
-* Lessons Learned / Präventive Massnahmen
 
 === Feature-Implementierung mit Feature-Toggles
 
