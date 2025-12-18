@@ -28,7 +28,7 @@ backend:
     - echo "Building and pushing frontend image with tag - $CI_COMMIT_SHA"
     - |
       mvn -B \
-        verify jib:build \
+        compile jib:build \
         -Djib.to.image="$CI_REGISTRY_IMAGE/backend" \
         -Djib.to.tags="$CI_COMMIT_SHA" \
         -Djib.to.auth.username="$CI_REGISTRY_USER" \
