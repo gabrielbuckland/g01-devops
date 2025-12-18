@@ -70,6 +70,16 @@ backend-test:
       junit:
         - backend/target/surefire-reports/TEST-*.xml
 
+frontend-test:
+  stage: test
+  image: node:22
+  rules:
+    - if: $CI_COMMIT_BRANCH
+  script:
+    - cd frontend
+    - npm ci
+    - npm run test
+
 # ---------- Deploy: test (uses your utils.yml rules) ----------
 deploy-to-test:
   stage: deploy
