@@ -50,6 +50,26 @@ frontend:
     - docker push "$CI_REGISTRY_IMAGE/frontend:$CI_COMMIT_SHA"
     - docker logout || true
 
+backend-test:
+  stage: test
+  image: maven:3.9-eclipse-temurin-21
+  services:
+    - name: docker:28.4.0-dind
+      alias: docker
+  variables:
+    DOCKER_HOST: tcp://docker:2375
+    DOCKER_TLS_CERTDIR: ""
+  rules:
+    - if: $CI_COMMIT_BRANCH
+  script:
+    - cd backend
+    - mvn test
+  artifacts:
+    when: always
+    reports:
+      junit:
+        - backend/target/surefire-reports/TEST-*.xml
+
 # ---------- Deploy: test (uses your utils.yml rules) ----------
 deploy-to-test:
   stage: deploy
