@@ -89,10 +89,38 @@ In beiden Fällen:
 
 === Rückfall auf ältere Version (Rollback)
 
-* Wann wird ein Rollback ausgelöst (Kriterien)
-* Technisches Vorgehen (z.B. redeploy früheres Image, Helm-Rollback)
-* Datenaspekte (Migrationen, Feature-Toggles)
-* Dokumentation im Ticket- / Incident-System
+==== Wann wird ein Rollback ausgelöst (Kriterien)
+Ein Rollback wird ausgelöst, wenn nach einem Deployment in *Prod* (oder *Test*) mindestens eines zutrifft:
+
+* Healthcheck schlägt fehl (`unhealthy`) oder Service startet nicht stabil
+* Blackbox Exporter meldet wiederholt HTTP 5xx / Timeouts
+* Kritischer Business-Flow funktioniert nicht (z.B. Formular-Submit)
+* Regression/Security-Issue mit hohem Impact
+
+==== Technisches Vorgehen (redeploy früheres Image)
+Wir deployen *kein neues Build*, sondern rollen auf ein bereits gebautes Image mit einem früheren Tag zurück.
+
+
+==== Datenaspekte (Migrationen, Feature-Toggles)
+*Migrationen (Flyway):* Rollback der Applikation rollt die DB nicht automatisch zurück (Flyway ist forward-only).
+Rollback ist nur sicher, wenn die DB-Änderungen abwärtskompatibel sind (additive Änderungen / Expand-Contract).
+
+Wenn Migrationen bereits gelaufen sind:
+* Rollback nur App (wenn kompatibel), oder
+* DB-Restore (Backup/Snapshot) + Rollback App, oder
+* Forward Fix (Hotfix nach vorne)
+
+*Feature-Toggles:* Falls ein Feature per Unleash/GitLab Feature Flags gesteuert ist, kann als Sofortmassnahme ein Disable des Flags ein Redeploy vermeiden. Rollback bleibt Option, wenn die Ursache nicht toggle-bar ist.
+
+==== Dokumentation im Ticket-/Incident-System
+Im Incident/Ticket dokumentieren:
+
+* Zeitpunkt, Impact, Symptome
+* Versionen: deployed SHA -> rollback SHA
+* Auslöser/Kriterium für Rollback
+* Verifikation: Healthchecks, Smoke-Test, Monitoring-Status
+* Nächste Schritte: Root Cause, Fix-Branch (hotfix/bugfix), erneuter Rollout über Test -> Prod
+
 
 === Nachvollziehbare Behandlung eines Incidents
 
