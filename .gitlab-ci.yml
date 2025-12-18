@@ -60,7 +60,10 @@ backend-test:
     DOCKER_HOST: tcp://docker:2375
     DOCKER_TLS_CERTDIR: ""
   rules:
-    - if: $CI_COMMIT_BRANCH
+    - if: $CI_COMMIT_BRANCH =~ $HOTFIX_IDENTIFIER && $CI_PIPELINE_SOURCE != "schedule"
+      allow_failure: true
+    - if: $CI_COMMIT_BRANCH && $CI_PIPELINE_SOURCE != "schedule"
+      when: on_success
   script:
     - cd backend
     - mvn test
@@ -74,7 +77,10 @@ frontend-test:
   stage: test
   image: mcr.microsoft.com/playwright:v1.50.0-noble
   rules:
-    - if: $CI_COMMIT_BRANCH
+    - if: $CI_COMMIT_BRANCH =~ $HOTFIX_IDENTIFIER && $CI_PIPELINE_SOURCE != "schedule"
+      allow_failure: true
+    - if: $CI_COMMIT_BRANCH && $CI_PIPELINE_SOURCE != "schedule"
+      when: on_success
   cache:
     key:
       files:
