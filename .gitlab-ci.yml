@@ -72,12 +72,18 @@ backend-test:
 
 frontend-test:
   stage: test
-  image: node:22
+  image: mcr.microsoft.com/playwright:v1.49.0-noble
   rules:
     - if: $CI_COMMIT_BRANCH
+  cache:
+    key:
+      files:
+        - frontend/package-lock.json
+    paths:
+      - frontend/.npm/
   script:
     - cd frontend
-    - npm ci
+    - npm ci --cache .npm --prefer-offline
     - npm run test
 
 # ---------- Deploy: test (uses your utils.yml rules) ----------
