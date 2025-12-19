@@ -89,7 +89,8 @@ frontend-test:
       - frontend/.npm/
   script:
     - cd frontend
-    - npm ci --cache .npm --prefer-offline --engine-strict=false
+    - ls -R src/lib/components
+    - npm ci ...
     - npm run test
 
 # ---------- Deploy: test (uses your utils.yml rules) ----------
