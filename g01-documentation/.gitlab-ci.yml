@@ -16,7 +16,7 @@
 default:
     image: maven:3.9.11-eclipse-temurin-21
     tags:
-        - hslu    
+        - hslu
 
 variables:
     MAVEN_CLI_OPTS: "--batch-mode"
@@ -39,7 +39,7 @@ site:
         paths:
             - target/site/
             - target/generated-docs
-            
+
 pages:
     stage: deploy
     script:
