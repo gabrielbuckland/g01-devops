@@ -1,0 +1,14 @@
+# Keeps the build context small and, more importantly, keeps the host
+# node_modules out of the image. Without this the COPY of the frontend sources
+# would overwrite the node_modules that npm ci just installed.
+# BuildKit reads this file because it is named after the Dockerfile.
+**/node_modules
+**/target
+**/.svelte-kit
+**/.git
+**/.idea
+**/.DS_Store
+**/*.iml
+**/__screenshots__
+g01-documentation
+devops-stack

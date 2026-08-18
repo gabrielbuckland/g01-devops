@@ -1,0 +1,17 @@
+{
+  "version": 2,
+  "features": [
+    {
+      "name": "fixloading",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [
+        {
+          "name": "default"
+        }
+      ],
+      "variants": []
+    }
+  ]
+}

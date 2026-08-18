@@ -1,0 +1,11 @@
+# The dashboard in g01-monitoring references its data source by the uid
+# prometheus, so the uid here is not arbitrary. Changing it breaks the panel.
+apiVersion: 1
+
+datasources:
+  - name: Prometheus
+    type: prometheus
+    uid: prometheus
+    access: proxy
+    url: http://prometheus:9090
+    isDefault: true

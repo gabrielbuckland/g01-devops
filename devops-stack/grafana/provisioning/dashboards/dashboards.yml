@@ -1,0 +1,13 @@
+# Loads every dashboard from the mounted g01-monitoring/grafana directory.
+# In the lab setup the dashboard was added by hand through the Grafana UI and
+# only exported to that repository afterwards, which is why nothing in the
+# original compose file provisions it.
+apiVersion: 1
+
+providers:
+  - name: g01-monitoring
+    type: file
+    allowUiUpdates: false
+    options:
+      path: /var/lib/grafana/dashboards
+      foldersFromFilesStructure: false
