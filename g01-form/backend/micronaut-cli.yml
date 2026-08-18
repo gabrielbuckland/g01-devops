@@ -1,0 +1,6 @@
+applicationType: default
+defaultPackage: ch.hslu.devops.g01
+testFramework: junit
+sourceLanguage: java
+buildTool: maven
+features: [app-name, http-client-test, jackson-databind, java, java-application, jdbc-hikari, junit, logback, maven, maven-enforcer-plugin, micronaut-aot, micronaut-http-validation, mockito, netty-server, openapi, postgres, properties, readme, serialization-jackson, shade, static-resources, swagger-ui, testcontainers]

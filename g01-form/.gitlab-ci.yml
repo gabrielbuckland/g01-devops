@@ -1,0 +1,148 @@
+include:
+  - template: Security/SAST.gitlab-ci.yml
+  - local: gitlab/utils.yml
+
+# Never create pipelines for tags (branch-only pipelines)
+workflow:
+  rules:
+    - if: $CI_COMMIT_TAG
+      when: never
+    - when: always
+
+stages:
+  - build
+  - test
+  - deploy
+
+sast:
+  stage: test
+
+# ---------- Build: backend (branches only, SHA tag) ----------
+backend:
+  stage: build
+  image: maven:3.9-eclipse-temurin-21
+  rules:
+    - if: $CI_COMMIT_BRANCH # only branches
+  script:
+    - cd backend
+    - echo "Building and pushing frontend image with tag - $CI_COMMIT_SHA"
+    - |
+      mvn -B \
+        compile jib:build \
+        -Djib.to.image="$CI_REGISTRY_IMAGE/backend" \
+        -Djib.to.tags="$CI_COMMIT_SHA" \
+        -Djib.to.auth.username="$CI_REGISTRY_USER" \
+        -Djib.to.auth.password="$CI_REGISTRY_PASSWORD"
+
+# ---------- Build: frontend (branches only, SHA tag) ----------
+frontend:
+  stage: build
+  image: docker:28.4.0-cli
+  services:
+    - docker:dind
+  rules:
+    - if: $CI_COMMIT_BRANCH # only branches
+  script:
+    - cd frontend
+    - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
+    - echo "Building and pushing frontend image with tag - $CI_COMMIT_SHA"
+    - docker build -t "$CI_REGISTRY_IMAGE/frontend:$CI_COMMIT_SHA" .
+    - docker push "$CI_REGISTRY_IMAGE/frontend:$CI_COMMIT_SHA"
+    - docker logout || true
+
+backend-test:
+  stage: test
+  image: maven:3.9-eclipse-temurin-21
+  services:
+    - name: docker:28.4.0-dind
+      alias: docker
+  variables:
+    DOCKER_HOST: tcp://docker:2375
+    DOCKER_TLS_CERTDIR: ""
+  rules:
+    - if: $CI_COMMIT_BRANCH =~ $HOTFIX_IDENTIFIER && $CI_PIPELINE_SOURCE != "schedule"
+      allow_failure: true
+    - if: $CI_COMMIT_BRANCH && $CI_PIPELINE_SOURCE != "schedule"
+      when: on_success
+  script:
+    - cd backend
+    - mvn test
+  artifacts:
+    when: always
+    reports:
+      junit:
+        - backend/target/surefire-reports/TEST-*.xml
+
+frontend-test:
+  stage: test
+  image: mcr.microsoft.com/playwright:v1.55.1-noble
+  rules:
+    - if: $CI_COMMIT_BRANCH =~ $HOTFIX_IDENTIFIER && $CI_PIPELINE_SOURCE != "schedule"
+      allow_failure: true
+    - if: $CI_COMMIT_BRANCH && $CI_PIPELINE_SOURCE != "schedule"
+      when: on_success
+  cache:
+    key:
+      files:
+        - frontend/package-lock.json
+    paths:
+      - frontend/.npm/
+  script:
+    - cd frontend
+    - ls -R src/lib/components
+    - npm ci ...
+    - npm run test
+
+# ---------- Deploy: test (uses your utils.yml rules) ----------
+deploy-to-test:
+  stage: deploy
+  tags: ["deploy-test-docker"]
+  rules:
+    - !reference [.test_deployment_rules, rules]
+  image: docker:28.4.0-cli
+  environment:
+    name: test
+    url: http://srv-020.devops.ls.eee.intern/
+  script:
+    - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
+    - rm -f .env.test
+    - |
+      cat > .env.test <<EOF
+      POSTGRES_USER=${TEST_POSTGRES_USER}
+      POSTGRES_PASSWORD=${TEST_POSTGRES_PW}
+      POSTGRES_DB=${TEST_POSTGRES_DB}
+      IMAGE_TAG=${CI_COMMIT_SHA}
+      UNLEASH_URL=${UNLEASH_URL}
+      UNLEASH_INSTANCE_ID=${UNLEASH_INSTANCE_ID}
+      EOF
+    - docker compose --env-file .env.test -f docker_test.yml down --remove-orphans --timeout 60 || true
+    - docker compose --env-file .env.test -f docker_test.yml pull
+    - docker compose --env-file .env.test -f docker_test.yml up -d --wait --wait-timeout 180
+    - docker logout || true
+
+# ---------- Deploy: prod (uses your utils.yml rules) ----------
+deploy-to-prod:
+  stage: deploy
+  tags: ["deploy-prod-docker"]
+  rules:
+    - !reference [.prod_deployment_rules, rules]
+  image: docker:28.4.0-cli
+  environment:
+    name: prod
+    url: http://srv-021.devops.ls.eee.intern/
+  script:
+    - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
+    - rm -f .env.prod
+    - |
+      cat > .env.prod <<EOF
+      POSTGRES_USER=${PROD_POSTGRES_USER}
+      POSTGRES_PASSWORD=${PROD_POSTGRES_PW}
+      POSTGRES_DB=${PROD_POSTGRES_DB}
+      IMAGE_TAG=${CI_COMMIT_SHA}
+      UNLEASH_URL=${UNLEASH_URL}
+      UNLEASH_INSTANCE_ID=${UNLEASH_INSTANCE_ID}
+      EOF
+    - docker compose --env-file .env.prod -f docker_prod.yml down --remove-orphans --timeout 60 || true
+    - docker compose --env-file .env.prod -f docker_prod.yml pull
+    - docker compose --env-file .env.prod -f docker_prod.yml up -d --wait --wait-timeout 180
+    - docker logout || true

@@ -1,0 +1,98 @@
+volumes:
+  postgres_data:
+
+services:
+  postgres:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "PGPASSWORD=$$POSTGRES_PASSWORD pg_isready -h localhost -p 5432 -U $$POSTGRES_USER -d $$POSTGRES_DB || exit 1",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  backend:
+    image: cr.gitlab.switch.ch/hslu/edu/bachelor-computer-science/devops/25hs01/g01/g01-form/backend:${IMAGE_TAG}
+    pull_policy: always
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATASOURCES_DEFAULT_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}
+      DATASOURCES_DEFAULT_USERNAME: ${POSTGRES_USER}
+      DATASOURCES_DEFAULT_PASSWORD: ${POSTGRES_PASSWORD}
+      MICRONAUT_ENVIRONMENTS: prod
+      UNLEASH_URL: ${UNLEASH_URL}
+      UNLEASH_INSTANCE_ID: ${UNLEASH_INSTANCE_ID}
+      JAVA_OPTS: ${JAVA_OPTS:-"-XX:+ExitOnOutOfMemoryError -XX:MaxRAMPercentage=75"}
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8080/api || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    read_only: true
+    tmpfs:
+      - /tmp
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.api.entrypoints=web"
+      - "traefik.http.routers.api.rule=PathPrefix(`/api`)"
+      - "traefik.http.routers.api.priority=100"
+      - "traefik.http.services.api.loadbalancer.server.port=8080"
+
+  frontend:
+    image: cr.gitlab.switch.ch/hslu/edu/bachelor-computer-science/devops/25hs01/g01/g01-form/frontend:${IMAGE_TAG}
+    pull_policy: always
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.front.entrypoints=web"
+      - "traefik.http.routers.front.rule=PathPrefix(`/`)"
+      - "traefik.http.routers.front.priority=1"
+      - "traefik.http.services.front.loadbalancer.server.port=3000"
+
+  traefik:
+    image: traefik:v2.11
+    command:
+      - "--providers.docker=true"
+      - "--entrypoints.web.address=:80"
+    ports:
+      - "80:80"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+    restart: unless-stopped
+
+  postgres_exporter:
+    image: quay.io/prometheuscommunity/postgres-exporter:v0.15.0
+    container_name: g01-form-postgres-exporter
+    restart: unless-stopped
+    environment:
+      - DATA_SOURCE_NAME=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?sslmode=disable
+    depends_on:
+      postgres:
+        condition: service_healthy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.pg-exporter.entrypoints=web"
+      - "traefik.http.routers.pg-exporter.rule=PathPrefix(`/pg-exporter`)"
+      - "traefik.http.routers.pg-exporter.middlewares=pg-strip"
+      - "traefik.http.middlewares.pg-strip.stripprefix.prefixes=/pg-exporter"
+      - "traefik.http.services.pg-exporter.loadbalancer.server.port=9187"

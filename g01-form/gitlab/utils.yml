@@ -1,0 +1,68 @@
+variables:
+  MAIN_IDENTIFIER: /^main$/
+  FEATURE_IDENTIFIER: /^feat(.*)$/
+  BUGFIX_IDENTIFIER: /^bugfix(.*)$/
+  HOTFIX_IDENTIFIER: /^hotfix(.*)$/
+
+###########################
+# Aggregated Rules        #
+###########################
+
+.test_deployment_rules:
+  rules:
+    - !reference [ .is_main_branch, rules ]
+    - !reference [ .is_feature_branch:manual, rules ]
+    - !reference [ .is_bugfix_branch:manual, rules ]
+    - !reference [ .is_hotfix_branch:manual, rules ]
+
+.prod_deployment_rules:
+  rules:
+    - !reference [ .is_main_branch:manual, rules ]
+    - !reference [ .is_hotfix_branch:manual, rules ]
+
+################
+# Rules        #
+################
+
+.is_main_branch:
+  rules:
+    - if: $CI_COMMIT_BRANCH =~ $MAIN_IDENTIFIER && $CI_PIPELINE_SOURCE != "schedule"
+
+.is_main_branch:manual:
+  rules:
+    - if: $CI_COMMIT_BRANCH =~ $MAIN_IDENTIFIER && $CI_PIPELINE_SOURCE != "schedule"
+      allow_failure: true
+      when: manual
+
+.is_feature_branch:
+  rules:
+    - if: $CI_COMMIT_BRANCH =~ $FEATURE_IDENTIFIER && $CI_PIPELINE_SOURCE != "schedule"
+      allow_failure: true
+
+.is_feature_branch:manual:
+  rules:
+    - if: $CI_COMMIT_BRANCH =~ $FEATURE_IDENTIFIER && $CI_PIPELINE_SOURCE != "schedule"
+      allow_failure: true
+      when: manual
+
+.is_bugfix_branch:
+  rules:
+    - if: $CI_COMMIT_BRANCH =~ $BUGFIX_IDENTIFIER && $CI_PIPELINE_SOURCE != "schedule"
+      allow_failure: true
+
+.is_bugfix_branch:manual:
+  rules:
+    - if: $CI_COMMIT_BRANCH =~ $BUGFIX_IDENTIFIER && $CI_PIPELINE_SOURCE != "schedule"
+      allow_failure: true
+      when: manual
+
+.is_hotfix_branch:
+  rules:
+    - if: $CI_COMMIT_BRANCH =~ $HOTFIX_IDENTIFIER && $CI_PIPELINE_SOURCE != "schedule"
+      allow_failure: true
+
+.is_hotfix_branch:manual:
+  rules:
+    - if: $CI_COMMIT_BRANCH =~ $HOTFIX_IDENTIFIER && $CI_PIPELINE_SOURCE != "schedule"
+      allow_failure: true
+      when: manual
