@@ -138,6 +138,12 @@ for the dashboard. It needs Docker and nothing else. See
 [devops-stack/README.md](devops-stack/README.md) for what it replaces and what
 it cannot show.
 
+The dashboard below is the one from `g01-monitoring`, unmodified, reading from
+the local stack. The flat line at ten is idle connections held by the
+connection pool, the oscillating one is queries actually running.
+
+![The PostgreSQL dashboard from g01-monitoring, running against the local stack](docs/grafana-dashboard.png)
+
 ## Limits
 
 Stated plainly, because a named gap is worth more than a vague claim.
