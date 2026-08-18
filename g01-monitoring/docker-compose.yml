@@ -1,0 +1,64 @@
+networks:
+  default:
+    name: g01-monitoring_default
+
+volumes:
+  prometheus_data:
+  grafana_data:
+
+services:
+  traefik:
+    image: traefik:v2.9
+    command:
+      - "--providers.docker=true"
+      - "--entrypoints.web.address=:80"
+    ports:
+      - "80:80"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+    restart: unless-stopped
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: g01-monitoring-prometheus
+    restart: unless-stopped
+    volumes:
+      - ${CI_PROJECT_DIR}/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.prometheus.entrypoints=web"
+      - "traefik.http.routers.prometheus.rule=PathPrefix(`/prometheus`)"
+      - "traefik.http.routers.prometheus.middlewares=prometheus-strip"
+      - "traefik.http.middlewares.prometheus-strip.stripprefix.prefixes=/prometheus"
+      - "traefik.http.services.prometheus.loadbalancer.server.port=9090"
+
+  blackbox-exporter:
+    image: prom/blackbox-exporter:v0.25.0
+    container_name: g01-monitoring-blackbox
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.blackbox.entrypoints=web"
+      - "traefik.http.routers.blackbox.rule=PathPrefix(`/blackbox`)"
+      - "traefik.http.routers.blackbox.middlewares=blackbox-strip"
+      - "traefik.http.middlewares.blackbox-strip.stripprefix.prefixes=/blackbox"
+      - "traefik.http.services.blackbox.loadbalancer.server.port=9115"
+
+  grafana:
+    image: grafana/grafana-oss:latest
+    container_name: g01-monitoring-grafana
+    restart: unless-stopped
+    volumes:
+      - grafana_data:/var/lib/grafana
+    environment:
+      GF_SERVER_ROOT_URL: "http://srv-003.devops.ls.eee.intern/grafana"
+      GF_SERVER_SERVE_FROM_SUB_PATH: "true"
+
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.grafana.entrypoints=web"
+      - "traefik.http.routers.grafana.rule=PathPrefix(`/grafana`)"
+      - "traefik.http.routers.grafana.priority=1"
+      - "traefik.http.services.grafana.loadbalancer.server.port=3000"
+

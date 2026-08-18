@@ -1,0 +1,57 @@
+workflow:
+  rules:
+    - if: $CI_COMMIT_TAG
+      when: never
+    - when: always
+
+stages:
+  - deploy
+
+deploy-monitoring:
+  stage: deploy
+  image: docker:28.4.0-cli
+  services:
+    - docker:dind
+
+  tags:
+    - deploy-monitoring-docker
+
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+
+  environment:
+    name: monitoring/test
+    url: http://srv-003.devops.ls.eee.intern/grafana
+
+  script:
+    - echo "Login to GitLab Registry"
+    - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
+
+    - echo "Projektstruktur anzeigen"
+    - ls -R .
+
+    - echo "Prometheus-Verzeichnis anzeigen"
+    - ls -R ./prometheus || true
+
+    - echo "Docker Compose config check"
+    - docker compose config
+
+    - echo "Stopping old stack..."
+    - docker compose down --remove-orphans || true
+
+    - echo "Pulling images..."
+    - docker compose pull
+
+    - echo "Starting new stack..."
+    - docker compose up -d --force-recreate --remove-orphans
+
+    - echo "Monitoring Stack (Test) deployed!"
+
+    - echo "Grafana UI:"
+    - echo "http://srv-003.devops.ls.eee.intern/grafana"
+
+    - echo "Prometheus UI:"
+    - echo "http://srv-003.devops.ls.eee.intern/prometheus"
+
+    - echo "Blackbox Exporter UI:"
+    - echo "http://srv-003.devops.ls.eee.intern/blackbox"
