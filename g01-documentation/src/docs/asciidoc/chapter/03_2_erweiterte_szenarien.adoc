@@ -1,0 +1,187 @@
+== Erweiterte Szenarien
+
+==== Vorgehen für Hotfix (Branching, Tests, Freigaben)
+
+Der technische Ablauf für einen Notfall-Bugfix startet mit einem eigenen Hotfix-Branch:
+
+* Branch-Namensschema: `hotfix/<kurze-beschreibung>`
+* Nach dem ersten Commit und Push startet automatisch eine Pipeline für diesen Branch.
+
+Dabei passieren folgende Schritte:
+
+1. *Build-Stage*
+* Backend-Image wird gebaut (Maven + Jib, Tag = `CI_COMMIT_SHA`)
+* Frontend-Image wird gebaut (Docker Build, Tag = `CI_COMMIT_SHA`)
+
+2. *Test-Stage*
+* SAST-Job Frontend- und Backend-Tests laufen in der `test`-Stage
+* Hotfix-Jobs verwenden `allow_failure: true` bei den Frontend- und Backend-Tests, damit in einem Notfall nicht alles strikt blockiert wird, aber dennoch Feedback vorliegt.
+
+3. *Optionale Deployments auf Test*
+Das Test-Deployment verwendet die aggregierten Regeln:
+
+   [source,yaml]
+   ----
+   .test_deployment_rules:
+     rules:
+       - !reference [ .is_main_branch, rules ]
+       - !reference [ .is_feature_branch:manual, rules ]
+       - !reference [ .is_bugfix_branch:manual, rules ]
+       - !reference [ .is_hotfix_branch:manual, rules ]
+   ----
+
+   Für Hotfix-Branches bedeutet dies:
+
+* Deploy auf Test ist **manuell** (Button im Pipeline-UI, `when: manual`).
+* So kann der Bugfix in einer kontrollierten Testumgebung geprüft werden, bevor er in Produktion geht.
+
+4. *Freigaben*
+Vor dem Merge und vor dem Produktions-Deployment sollte mindestens erfolgen:
+
+* technisches Review
+* Entscheidung durch verantwortliche Rolle (z.B. Incident-Manager, Product Owner, Betrieb)
+
+==== Schnelles, aber kontrolliertes Deployment
+
+Die neuen Rules sorgen dafür, dass es *kein automatisches* Deployment auf Produktion gibt - weder für `main` noch für `hotfix`:
+
+[source,yaml]
+----
+.prod_deployment_rules:
+  rules:
+    - !reference [ .is_main_branch:manual, rules ]
+    - !reference [ .is_hotfix_branch:manual, rules ]
+----
+
+Das heisst:
+
+* Nur Pipelines auf `main` oder `hotfix/...` sehen einen *Deploy-to-Prod*-Job.
+* Dieser Job ist immer **manuell** (`when: manual`).
+* Feature- und Bugfix-Branches können **nicht** direkt auf Produktion deployt werden.
+
+Es gibt damit zwei typische Varianten für einen Notfall-Bugfix:
+
+1. **Direkter Hotfix-Deploy von `hotfix/...` auf Produktion**
+* Pipeline läuft auf dem Hotfix-Branch.
+* Optional: manuelles Deploy auf Test (Absicherung).
+* Danach: manueller Start des Prod-Deploy-Jobs aus derselben Pipeline
+(durch `.is_hotfix_branch:manual` in `.prod_deployment_rules`).
+* Vorteil: schnell, direkt aus dem Notfall-Branch.
+
+2. **Hotfix über `main` stabilisieren und dann deployen**
+* Hotfix wird nach kurzer Prüfung in `main` gemergt.
+* Neue Pipeline auf `main` startet.
+* Prod-Deploy ist manuell verfügbar (über `.is_main_branch:manual`).
+* Vorteil: Historie und Codebasis bleiben sauber synchronisiert, `main` entspricht Produktion.
+
+In beiden Fällen:
+
+* wird das produktive Deployment nur durch expliziten manuellen Klick ausgelöst,
+* kommt ausschliesslich das Image mit genau diesem Commit-Hash (`CI_COMMIT_SHA`) zum Einsatz,
+* läuft das Deployment kontrolliert über `docker compose` mit Stop, Pull, Start und `--wait`.
+
+=== Rückfall auf ältere Version (Rollback)
+
+==== Wann wird ein Rollback ausgelöst (Kriterien)
+Ein Rollback wird ausgelöst, wenn nach einem Deployment in *Prod* (oder *Test*) mindestens eines zutrifft:
+
+* Healthcheck schlägt fehl (`unhealthy`) oder Service startet nicht stabil
+* Blackbox Exporter meldet wiederholt HTTP 5xx / Timeouts
+* Kritischer Business-Flow funktioniert nicht (z.B. Formular-Submit)
+* Regression/Security-Issue mit hohem Impact
+
+==== Technisches Vorgehen (redeploy früheres Image)
+Wir deployen *kein neues Build*, sondern rollen auf ein bereits gebautes Image mit einem früheren Tag zurück.
+
+
+==== Datenaspekte (Migrationen, Feature-Toggles)
+*Migrationen (Flyway):* Rollback der Applikation rollt die DB nicht automatisch zurück (Flyway ist forward-only).
+Rollback ist nur sicher, wenn die DB-Änderungen abwärtskompatibel sind (additive Änderungen / Expand-Contract).
+
+Wenn Migrationen bereits gelaufen sind:
+* Rollback nur App (wenn kompatibel), oder
+* DB-Restore (Backup/Snapshot) + Rollback App, oder
+* Forward Fix (Hotfix nach vorne)
+
+*Feature-Toggles:* Falls ein Feature per Unleash/GitLab Feature Flags gesteuert ist, kann als Sofortmassnahme ein Disable des Flags ein Redeploy vermeiden. Rollback bleibt Option, wenn die Ursache nicht toggle-bar ist.
+
+==== Dokumentation im Ticket-/Incident-System
+Im Incident/Ticket dokumentieren:
+
+* Zeitpunkt, Impact, Symptome
+* Versionen: deployed SHA -> rollback SHA
+* Auslöser/Kriterium für Rollback
+* Verifikation: Healthchecks, Smoke-Test, Monitoring-Status
+* Nächste Schritte: Root Cause, Fix-Branch (hotfix/bugfix), erneuter Rollout über Test -> Prod
+
+=== Feature-Implementierung mit Feature-Toggles
+
+Feature-Toggles trennen Deployment von Release. Neue Features werden produktiv ausgerollt, aber erst später per Toggle für einzelne Nutzergruppen aktiviert. Das reduziert Risiko (kein Big Bang), erlaubt Canary-Rollouts und macht Rollbacks oft überflüssig (Toggle zurücksetzen statt Redeploy).
+
+==== Technische Umsetzung (GitLab Feature Flags mit Unleash)
+
+* Flags werden in GitLab unter *Deploy > Feature Flags* angelegt. 
+** Pro Flag wird ein Name vergeben (z.B. `checkout-v2`) und ein Ziel-Environment (`test`, `prod`).
+** Es können optionale Strategien definiert werden (z.B. prozentualer Rollout, Nutzer-IDs).
+* GitLab stellt eine Unleash-kompatible API bereit. Der Client in der Micronaut-App nutzt folgende Konfiguration (als env vars definiert, welche die properties setzen):
+** `UNLEASH_URL` (Unleash-Endpoint aus GitLab, z.B. `https://gitlab.switch.ch/api/v4/feature_flags/unleash/<project-id>`)
+** `UNLEASH_INSTANCE_ID` (Client Token aus GitLab)
+** `UNLEASH_ENVIRONMENT` (z.B. `test` oder `prod`)
+** `UNLEASH_FETCH_INTERVAL` (optional) (Intervall in Sekunden, wie oft die Toggles aktualisiert werden, z.B. `60`)
+** `UNLEASH_APP_NAME` (optional) (Name der Anwendung, z.B. `g01-form-backend`)
+* In der App verwenden wir den offiziellen Unleash Java Client:
+
+Dependency im `pom.xml` hinzufügen:
+[source,xml]
+----
+<dependency>
+    <groupId>io.getunleash</groupId>
+    <artifactId>unleash-client-java</artifactId>
+    <version>Latest version here</version>
+</dependency>
+----
+
+Unleash Client initialisieren:
+[source,java]
+----
+@Factory
+public class UnleashFactory {
+
+    @Singleton
+    UnleashConfig unleashConfig(UnleashConfigurationProperties props) {
+        return UnleashConfig.builder()
+                .appName(props.getAppName())
+                .environment(props.getEnvironment())
+                .instanceId(props.getInstanceId())
+                .unleashAPI(props.getUrl())
+                .fetchTogglesInterval(props.getFetchInterval())
+                .disableMetrics()
+                .build();
+    }
+
+    @Singleton
+    Unleash unleash(UnleashConfig config) {
+        return new DefaultUnleash(config);
+    }
+}
+----
+
+Feature-Flag abfragen im Code:
+[source,java]
+----
+if(unleash.isEnabled("AwesomeFeature")) {
+  //do some magic
+} else {
+  //do old boring stuff
+}
+----
+
+==== Umgang in CI/CD
+
+* Flags werden als Konfiguration betrachtet. `UNLEASH_INSTANCE_ID`, `UNLEASH_URL` und `UNLEASH_ENVIRONMENT` liegen als geschützte GitLab CI/CD Variables vor und werden beim Deploy an die Anwendung durchgereicht.
+
+==== Strategien für Aufräumen alter Toggles
+
+* Jedes Feature-Flag erhält ein Ticket/Owner und ein geplantes Enddatum. Der Owner ist verantwortlich, nach erfolgreichem Rollout den Flag zu entfernen.
+* Nach der finalen Aktivierung wird der Codepfad ohne Toggle eingeschmolzen: Toggle-Abfragen und alternative Pfade entfernen, Tests bereinigen, Flag in GitLab löschen.
+* In einem monatlichen Housekeeping-Task werden Flags ohne aktiven Traffic oder abgelaufenem Enddatum identifiziert und entfernt.

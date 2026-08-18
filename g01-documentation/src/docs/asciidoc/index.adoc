@@ -1,0 +1,50 @@
+= Modul DEVOPS Gruppe g01
+Roland Gisler <roland.gisler@hslu.ch>
+V0.0.1, 2025-09-01
+:imagesdir: ./images
+:toc:
+:toc-title: Inhaltsverzeichnis
+:toclevels: 1
+
+<<<
+
+== Einführung
+Das ist die Dokumentation (auch als link:index.pdf[PDF]) der Gruppe g01.
+
+== Team
+Das Team besteht aus folgenden Personen:
+
+ * Buckland, Gabriel <gabriel.buckland@stud.hslu.ch>
+ * Schmid, Lukas <lukas.schmid@stud.hslu.ch>
+ * Sabanathan, Nevilan <nevilan.sabanathan@stud.hslu.ch>
+ * Hajdini, Bleron <bleron.hajdini@stud.hslu.ch>
+
+== Dokumentation
+Die Dokumentation ist mit https://asciidoc.org/[AsciiDoc] Format geschrieben und unter folgenden Links erreichbar:
+
+* link:./index.html[WEB]
+* link:./index.pdf[PDF]
+
+<<<
+
+include::chapter/01_uebersicht.adoc[]
+
+<<<
+
+include::chapter/02_1_deployment_setup.adoc[]
+
+<<<
+
+include::chapter/02_2_vm_setup.adoc[]
+
+<<<
+
+include::chapter/03_1_basisszenarien.adoc[]
+
+<<<
+
+include::chapter/03_2_erweiterte_szenarien.adoc[]
+
+<<<
+
+include::chapter/03_3_individuelle_szenarien.adoc[]

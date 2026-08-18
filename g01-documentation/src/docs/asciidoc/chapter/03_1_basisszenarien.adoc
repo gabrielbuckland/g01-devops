@@ -1,0 +1,419 @@
+== Basisszenarien
+
+==== 1. Einfacher Change-Request
+
+Ein Change-Request beginnt typischerweise mit der Erstellung eines neuen Branches. Der Branch beinhaltet die Ticket-Nr. in der Commit-Nachricht oder im Branch-Namen, z.B. `feature/introduce-type-safety-#412`.
+
+Die Pipeline unterscheidet dabei folgende Typen:
+
+* *`feature/`*: neue Funktionalität
+* *`bugfix/`*: Fehlerbehebung
+* *`hotfix/`*: dringende Korrektur
+* *`main`*: stabiler Hauptbranch
+
+Sobald auf einem dieser Branches ein Commit gepusht wird, startet die Pipeline automatisch (ausser bei Tags).
+Der `main`-Branch ist wie üblich geschützt.
+
+
+==== 2. Umsetzung (Build & Vorbereitung)
+
+Die technische Umsetzung eines Changes beginnt in der Pipeline mit der *build*-Stage.
+Hier werden Backend und Frontend automatisch gebaut:
+
+===== Backend Build
+
+* Wird für jeden Branch ausgeführt.
+* Baut das Artefakt mittels Maven und Jib.
+* Erzeugt ein Docker-Image, getaggt mit dem Commit-SHA.
+* Push in die Container Registry.
+
+===== Frontend Build
+
+* Analog zum Backend-Build.
+* Docker-Image wird gebaut und in die Registry gepusht.
+
+Diese Build-Prozesse bilden die Grundlage für spätere Tests und Deployments, da die Images auf Test- und Produktionssystemen wiederverwendet werden.
+
+==== 3. Q-Gate
+
+Das Q-Gate definiert, ob ein Change sauber gebaut und grundlegend geprüft wurde.
+Aus Sicht dieser Pipeline besteht das Q-Gate aus:
+
+* erfolgreichem Build inkl. Unit- und Integrationstests von Backend und Frontend
+* erfolgreicher SAST-Analyse
+
+Je nach Branchtyp ist auch relevant, ob ein Deployment manuell bestätigt werden muss (z.B. für Feature, Bugfix, Hotfix).
+Damit ist das Q-Gate ein technischer Qualitätsfilter, bevor ein Merge-Request erstellt und bewertet wird.
+
+==== 4. Merge-Request (Code Review & Freigabe)
+
+Nachdem ein Change erfolgreich gebaut und durch das Q-Gate gegangen ist, kann ein Merge-Request erstellt werden.
+
+Der Merge-Request profitiert von:
+
+* automatisch erzeugten Build-Artefakten (Docker-Images)
+* SAST-Bericht
+
+Für den Merge in den *main* Branch ist wesentlich, dass:
+
+* der Change sauber gebaut wurde
+* alle Testergebnisse erfolgreich sind
+* Reviews und Freigaben abgeschlossen sind (Vier-Augen-Prinzip)
+
+Sobald der Merge erfolgt, startet eine neue Pipeline auf *main*, die als Grundlage für die Delivery dient.
+
+==== 5. Delivery (Bereitstellung auf Testumgebung)
+
+Jeder Change, der in einem Feature-, Bugfix- oder Hotfix-Branch stattfindet, kann manuell auf der Testumgebung deployed werden.
+Alternativ kann der Hotfix-Branch auch manuell auf Prod deployt werden.
+Führt man den Merge in den *main* Branch durch, wird das Test-Deployment *automatisch* angestossen.
+
+Das Deployment auf Test:
+
+* erzeugt eine `.env.test`-Datei mit Test-Passwörtern und DB-Informationen
+* lädt die passenden Docker-Images (beide Services nutzen das Commit-SHA)
+* startet die Anwendung via `docker compose`
+* lässt das System mittels `--wait` hochfahren
+
+Dies bildet den Schritt der Delivery, also die Bereitstellung für Qualitäts- und Abnahmetests.
+
+==== 6. Deploy (Prod-Rollout)
+
+Das Deployment auf die Produktionsumgebung erfolgt kontrolliert und ist grundsätzlich *manuell*, selbst für *main*.
+
+Der Ablauf ist analog zum Test-Deployment:
+
+* Erstellung der `.env.prod`-Datei
+* Stopp und Neustart der Compose-Services
+* Laden der neuen Images
+* Start mit Health-Wait
+
+Die Entscheidung, wann ein Change produktiv geht, wird bewusst manuell getroffen - typischerweise nach erfolgreicher Abnahme auf der Testumgebung.
+
+==== Zusammenfassung des Lebenszyklus
+
+[cols="1,3",options="header"]
+|===
+|Phase |Beschreibung
+
+|Einfacher Change-Request
+|Branch wird erstellt, Pipeline startet automatisch.
+
+|Umsetzung
+|Build von Backend und Frontend, SAST-Sicherheitsprüfung.
+
+|Q-Gate
+|Build und Tests müssen erfolgreich sein, Branch-Regeln müssen passen.
+
+|Merge-Request
+|Review, Diskussion und Freigabe. Nach Merge in main startet eine neue Pipeline.
+
+|Delivery
+|Automatisches (main) oder manuelles (feature/bugfix/hotfix) Deployment auf Test.
+
+|Deploy
+|Manuelles Deployment auf Produktion; stabiler, kontrollierter Rollout.
+|===
+
+=== Neuer Mitarbeitender: Aufsetzen der Entwicklungsumgebung
+
+Dieses Kapitel beschreibt, wie ein neuer Mitarbeitender die komplette Entwicklungsumgebung selbstständig einrichten kann. Ziel ist, dass nach dieser Anleitung ein erster Build läuft und ein einfacher End-to-End-Workflow (Code ändern, testen, pushen) für Backend (Java Micronaut, Java 21) und Frontend (Svelte) funktioniert.
+
+==== Voraussetzungen
+
+* Studenten-Account an der HSLU ist aktiv und E-Mail-Adresse ist bekannt
+* SWITCH GitLab-Account ist erstellt und mit dem Studenten-Account verknüpft
+* Zugriff auf folgende GitLab-Projekte ist vorhanden:
+** https://gitlab.switch.ch/hslu/edu/bachelor-computer-science/devops/25hs01/g01/g01-form[GitLab Projekt Applikation]
+** https://gitlab.switch.ch/hslu/edu/bachelor-computer-science/devops/25hs01/g01/g01-monitoring[GitLab Monitoring Projekt]
+** https://gitlab.switch.ch/hslu/edu/bachelor-computer-science/devops/25hs01/g01/g01-documentation[Projekt Dokumentation]
+* Hardware:
+** Laptop mit aktuellem Betriebssystem (Linux oder macOS bevorzugt, Windows mit WSL2 möglich)
+** Adminrechte für lokale Installationen
+
+==== SSH-Key erstellen und SSH-Zugriff prüfen
+
+. Studenten-Account aktivieren und Passwort setzen (falls noch nicht erfolgt).
+. SSH-Zugriff auf die GitLab-Plattform testen:
++
+[source,bash]
+----
+git clone git@gitlab.switch.ch:hslu/edu/bachelor-computer-science/devops/25hs01/g01/g01-form.git
+----
+
+. Falls der Zugriff scheitert:
+.. SSH-Key generieren (Falls nicht schon vorhanden):
++
+[source,bash]
+----
+ssh-keygen -t ed25519 -C "vorname.nachname@stud.hslu.ch"
+----
+
+.. Den Public Key (`~/.ssh/id_ed25519.pub`) im GitLab-Profil unter *SSH Keys* hinterlegen.
+. SSH-Zugriff erneut testen (z.B. mit `git clone` oder `ssh -T git@gitlab.switch.ch`).
+
+==== Installation der Basis-Tools
+
+Folgende Tools müssen lokal installiert sein:
+
+* Git (Kommandozeile)
+* Container-Engine Docker
+* Java Development Kit (JDK) 21
+* Maven
+* Node.js (LTS) und npm für das Svelte-Frontend
+* Editor/IDE (z.B. VS Code, IntelliJ IDEA)
+
+Schritte:
+
+. Git installieren und globale Konfiguration setzen:
+.. Folge der offiziellen Installationsanleitung unter
+https://git-scm.com/install/[https://git-scm.com/install/]
+.. Konfiguriere Git mit deinem Namen und deiner E-Mail-Adresse:
++
+[source,bash]
+----
+git config --global user.name "Vorname Nachname"
+git config --global user.email "vorname.nachname@stud.hslu.ch"
+----
+
+. Container-Engine installieren und Test-Container starten:
+.. Folge der offiziellen Installationsanleitung unter https://docs.docker.com/engine/install[https://docs.docker.com/engine/install], um Docker zu installieren.
+.. Docker-Installation testen:
++
+[source,bash]
+----
+docker run --rm hello-world
+----
+
+. Java 21 installieren (z.B. OpenJDK/Temurin 21) und Version prüfen:
+.. Folge der offiziellen Installationsanleitung unter https://adoptium.net/temurin/releases/?version=21[https://adoptium.net/temurin/releases/?version=21], um JDK 21 zu installieren.
+.. Prüfe die installierte Java-Version:
++
+[source,bash]
+----
+java -version
+----
+
+. Maven installieren und Version prüfen:
+.. Folge der offiziellen Installationsanleitung unter https://maven.apache.org/install.html[https://maven.apache.org/install.html], um Maven zu installieren.
+.. Prüfe die installierte Maven-Version:
++
+[source,bash]
+----
+mvn -version
+----
+
+. Node.js (LTS) und npm installieren und Versionen prüfen:
+.. Folge der offiziellen Installationsanleitung unter https://nodejs.org/en/download/package-manager/[https://nodejs.org/en/download/package-manager/], um Node.js und npm zu installieren.
+.. Prüfe die installierten Versionen:
++
+[source,bash]
+----
+node -v
+npm -v
+----
+
+. IDE installieren und grundlegende Plugins / Extensions einrichten:
+.. Installiere z.B. Visual Studio Code von https://code.visualstudio.com/[https://code.visualstudio.com/] oder IntelliJ IDEA von https://www.jetbrains.com/idea/download/[https://www.jetbrains.com/idea/download/].
+.. Füge folgende Extensions/Plugins hinzu falls nicht schon vorhanden:
+** Java-Unterstützung (Maven)
+** JavaScript/TypeScript-Unterstützung für Svelte
+** Linter/Formatter nach Projektvorgabe
+
+==== Projekt auschecken und lokal starten
+
+. Haupt-Repository klonen:
++
+[source,bash]
+----
+git clone git@gitlab.switch.ch:hslu/edu/bachelor-computer-science/devops/25hs01/g01/g01-form.git
+cd g01-form
+----
+
+. Postgres-Datenbank via Docker-Compose starten:
++
+[source,bash]
+----
+docker compose -f docker_local.yml up -d
+----
+
+. Backend-Abhängigkeiten installieren, Backend bauen und ausführen:
++
+[source,bash]
+----
+cd backend
+mvn package
+MICRONAUT_ENVIRONMENTS=local java -jar ./target/g01-form-0.1.jar
+----
+
+. Frontend-Abhängigkeiten installieren, Frontend bauen und ausführen:
++
+[source,bash]
+----
+cd ../frontend
+npm install
+npm run dev
+----
+
+Backend ist nun auf http://localhost:8080 und Frontend auf http://localhost:3000 erreichbar.
+
+==== Arbeiten mit der Branching-Strategie
+
+Kurzüberblick (Details im eigenen Kapitel *Branching-Strategie*):
+
+. Neues Ticket im Issue-Tracker auswählen oder zugewiesen bekommen.
+. Lokalen Branch gemäss Konvention erstellen:
++
+[source,bash]
+----
+git checkout -b feature/<kurze-beschreibung>
+----
+
+. Änderungen implementieren, Tests lokal ausführen:
++
+[source,bash]
+----
+# Backend-Tests
+cd backend
+mvn test
+
+# Frontend-Tests
+cd ../frontend
+npm test
+----
+
+. Committen mit aussagekräftiger Nachricht:
++
+[source,bash]
+----
+git commit -am "feat: <kurze Beschreibung>"
+----
+. Branch pushen und Merge-Request öffnen.
+
+==== CI/CD-Integration prüfen
+
+. Nach dem ersten Push sicherstellen, dass die CI-Pipeline auf GitLab automatisch startet.
+. Pipeline-Status beobachten (grün/rot).
+. Bei Fehlschlägen Logs in der CI/CD-Oberfläche ansehen und Probleme beheben.
+. Sicherstellen, dass:
+** Unit-Tests für Backend (Maven) laufen
+** Unit-/Component-Tests für Frontend (Svelte) laufen
+** Linting / Static Code Analysis läuft
+** Artefakte/Container-Images gebaut und in die Registry gepusht werden
+
+==== Typische Probleme und Lösungen
+
+* **Git-Zugriff verweigert**
+** SSH-Key fehlt oder ist nicht im GitLab-Profil hinterlegt
+** HTTP(S)-Credential falsch - im Git-Client aktualisieren
+* **Backend-Build läuft lokal nicht durch**
+** Prüfen, ob JDK 21 installiert und aktiv ist
+** Prüfen, ob alle Abhängigkeiten heruntergeladen wurden (`mvn dependency:resolve`)
+* **Frontend-Build läuft nicht durch**
+** Prüfen, ob Node.js LTS verwendet wird
+** `node_modules` gegebenenfalls löschen und `npm install` erneut ausführen
+* **Container kann nicht gestartet werden**
+** Prüfen, ob Docker-Dienst läuft
+** Port-Konflikte: andere Dienste beenden oder Port im Config-File / `docker-compose` anpassen
+
+==== Checkliste für erfolgreiches Onboarding
+
+Ein neuer Mitarbeitender gilt als vollständig aufgesetzt, wenn:
+
+* [ ] Git-Zugriff funktioniert (clone, pull, push)
+* [ ] Backend-Build (Micronaut, Java 21) lokal erfolgreich durchläuft
+* [ ] Frontend (Svelte) lokal gebaut und gestartet werden kann
+* [ ] CI-Pipeline für einen eigenen Branch erfolgreich läuft
+* [ ] Mindestens ein kleiner Change-Request (z.B. Dokumentation oder kleine UI-Änderung) komplett durch den Prozess  
+  (Issue → Branch → MR → Review → Merge → Deployment in eine Nicht-Prod-Umgebung) gelaufen ist
+
+=== Analyse der 12-Factor-App Konformität
+
+Die folgende Tabelle zeigt den Erfüllungsgrad der 12 Faktoren in unserer Architektur.
+
+[cols="1,3", options="header"]
+|===
+| Faktor | Umsetzung / Begründung
+
+| *1. Codebase* +
+Eine Codebase, viele Deploys
+| Der gesamte Quellcode (Backend, Frontend, Monitoring, IaC) wird in einem zentralen Git-Repository verwaltet. Aus dieser **einen Codebase** werden alle Umgebungen (Test, Prod) versorgt. Es gibt keine separaten Repositories pro Umgebung.
+
+Nachweis: `.gitlab-ci.yml` definiert Pipelines für alle Stages aus demselben Repo.
+
+| *2. Abhängigkeiten* +
+Explizite Deklaration
+a|
+Alle Abhängigkeiten sind explizit manifestiert und isoliert.
+
+* **Backend:** Maven `pom.xml` definiert alle Java-Libs.
+* **Frontend:** NPM `package.json` definiert JS-Libs.
+* **System:** Docker Images kapseln System-Tools (z.B. `maven:3.9-eclipse-temurin-21`), sodass keine vorinstallierten Tools auf dem Host nötig sind.
+
+| *3. Konfiguration* +
+Konfiguration in Umgebungsvariablen
+a|
+Konfigurationen, die sich zwischen Umgebungen unterscheiden (DB-Credentials, URLs), sind strikt vom Code getrennt und werden per Environment-Variables injiziert.
+
+* **Code:** `application.properties` nutzt Platzhalter wie `${POSTGRES_USER}` oder `${UNLEASH_URL}`.
+* **Deployment:** `docker_prod.yml` setzt diese Werte zur Laufzeit. Es gibt keine hardcodierten Passwörter im Code.
+
+| *4. Unterstützende Dienste* +
+Angehängte Ressourcen
+| Die Datenbank (PostgreSQL) und der Feature-Toggle-Server (Unleash) werden als externe Ressourcen behandelt, die über eine URL erreichbar sind. Die Applikation unterscheidet nicht zwischen einer lokalen DB oder einer Managed Cloud DB.
+
+Nachweis: JDBC-URL `jdbc:postgresql://postgres:5432/...` in `docker_prod.yml`.
+
+| *5. Build, Release, Run* +
+Strikte Trennung
+a|
+Die CI/CD-Pipeline erzwingt diese Trennung.
+
+* **Build:** Erstellung des Docker-Images (mit Tag `$CI_COMMIT_SHA`) in der `build`-Stage.
+* **Release:** Das Image wird in die Registry gepusht. Konfigurationswerte werden vorbereitet.
+* **Run:** `docker compose up` auf dem Zielserver (Test/Prod) startet lediglich das fertige Release. Code-Änderungen zur Laufzeit sind unmöglich (`read_only: true`).
+
+| *6. Prozesse* +
+Stateless Processes
+| Die Applikations-Container (Backend/Frontend) sind **stateless**. Jeglicher persistenter Zustand wird an den unterstützenden Dienst (PostgreSQL) delegiert.
+
+Nachweis: Die Backend-Container laufen im `read_only: true` Modus, was das Schreiben auf das lokale Dateisystem technisch unterbindet.
+
+| *7. Portbindung* +
+Port Export
+a|
+Die Dienste sind völlig eigenständig und exportieren ihre Dienste per HTTP-Port-Binding.
+
+* **Backend:** Exportiert auf Port `8080`.
+* **Frontend:** Exportiert auf Port `3000`.
+* Ein Reverse Proxy (Traefik) routet die Anfragen lediglich weiter, die App selbst läuft nicht „in“ einem App-Server, sondern bringt ihren Server mit.
+
+| *8. Nebenläufigkeit* +
+Skalierung via Prozess-Modell
+| Da die Prozesse stateless sind (Faktor 6), kann die Last durch Starten weiterer Container-Instanzen horizontal skaliert werden. Docker Compose und Traefik (Load-Balancer) unterstützen dies nativ durch die Labels `traefik.http.services.api.loadbalancer.server.port=8080`.
+
+| *9. Einweggebrauch* +
+Disposability
+a|
+Die Container sind auf schnellen Start und problemlosen Stopp ausgelegt.
+
+* **Start:** Micronaut (Framework) ist für extrem schnelle Startzeiten optimiert.
+* **Stopp:** Die Container empfangen `SIGTERM` von Docker und fahren sauber herunter.
+* Die Instanzen sind „wegwerfbar“; ein Neustart oder Absturz führt nicht zu Datenverlust.
+
+| *10. Dev-Prod-Parität* +
+Gleiche Umgebungen
+| Entwicklung (Local), Test und Produktion nutzen dieselben Docker-Images und fast identische `docker-compose`-Files (`local`, `test`, `prod`).
+
+Beispiel: Die Datenbank-Migrationen (Flyway) laufen lokal exakt so ab wie auf Prod, was Schema-Abweichungen verhindert (siehe Individuelles Szenario „DB Migration“).
+
+| *11. Logs* +
+Logs als Event-Stream
+| Die Applikation schreibt Logs nicht in Dateien, sondern direkt nach `stdout`/`stderr`. Die Laufzeitumgebung ist verantwortlich für die Verwaltung dieses Streams. Es ist keine Logrotation innerhalb der App nötig.
+
+Nachweis: Keine Log-Volumes in `docker_prod.yml`, Standard Logback Konfiguration.
+
+| *12. Admin-Prozesse* +
+One-off Prozesse
+| Datenbank-Migrationen werden mittels **Flyway** verwaltet und sind als versionierte SQL-Skripte Teil des Codes. Die Migration läuft kontrolliert beim Start der Container als „One-off“-Task ab, bevor der Traffic freigegeben wird. Manuelle SQL-Eingriffe auf dem Server sind nicht notwendig.
+|===
