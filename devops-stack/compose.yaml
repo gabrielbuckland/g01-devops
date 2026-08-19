@@ -133,6 +133,14 @@ services:
       - ./flags/www:/usr/share/nginx/html:ro
       - ./flags/default.conf:/etc/nginx/conf.d/default.conf:ro
 
+  # The landing page at /pg-exporter links to an absolute /metrics, which lands
+  # on the frontend and returns 404. Traefik strips the prefix before
+  # forwarding, so the exporter has no way of knowing it is served under one.
+  # Unlike Prometheus and the blackbox exporter this image has no
+  # --web.external-url to tell it, and the only alternative moves the endpoint
+  # itself, which would push the proxy prefix into prometheus.yml. Left as is:
+  # Prometheus scrapes postgres-exporter:9187 over the compose network and never
+  # goes through Traefik. Use /pg-exporter/metrics directly.
   postgres-exporter:
     image: quay.io/prometheuscommunity/postgres-exporter:v0.15.0
     restart: unless-stopped
@@ -173,6 +181,15 @@ services:
   blackbox-exporter:
     image: prom/blackbox-exporter:v0.25.0
     restart: unless-stopped
+    command:
+      # Repeated from the image default, because setting command replaces it
+      # and the exporter then looks for blackbox.yml in its working directory.
+      - "--config.file=/etc/blackbox_exporter/config.yml"
+      # Same reason as Prometheus above: the prefix is stripped before
+      # forwarding, so the exporter has to be told the address the browser sees
+      # or the links on its landing page drop the /blackbox prefix.
+      - "--web.external-url=http://localhost:${WEB_PORT:-8081}/blackbox"
+      - "--web.route-prefix=/"
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.blackbox.entrypoints=web"
