@@ -136,9 +136,14 @@ second.
 ## Running it locally
 
 The VMs this was deployed to are inside the HSLU lab network and are no longer
-reachable, so nothing in `g01-form` or `g01-monitoring` can be started as
-written. `devops-stack` was added afterwards, for this repository rather than
-for the module, and collapses the three hosts onto one machine.
+reachable, so `docker_test.yml` and `docker_prod.yml` cannot be started: they
+pull their images from the school's registry. Both `g01-form` and
+`g01-monitoring` do have a local path that works without the lab network, each
+described in its own readme.
+
+To see the whole system at once, use `devops-stack`. It was added afterwards,
+for this repository rather than for the module, and collapses the three hosts
+onto one machine.
 
 ```bash
 cd devops-stack
