@@ -27,15 +27,6 @@ deploy-monitoring:
     - echo "Login to GitLab Registry"
     - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
 
-    - echo "Projektstruktur anzeigen"
-    - ls -R .
-
-    - echo "Prometheus-Verzeichnis anzeigen"
-    - ls -R ./prometheus || true
-
-    - echo "Docker Compose config check"
-    - docker compose config
-
     - echo "Stopping old stack..."
     - docker compose down --remove-orphans || true
 
