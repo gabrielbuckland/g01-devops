@@ -41,15 +41,15 @@ docker compose down -v       # stop and discard the database and dashboards
 Everything is behind a single Traefik entry point on port 8081, the same path
 based routing the lab VMs used. Set `WEB_PORT` to move it.
 
-| URL | What |
-| --- | --- |
-| http://localhost:8081/ | the newsletter form |
-| http://localhost:8081/api | backend, returns a plain text response |
-| http://localhost:8081/api/form | the entries, as JSON |
-| http://localhost:8081/grafana | Grafana, dashboard provisioned, no login needed |
-| http://localhost:8081/prometheus | Prometheus, four targets |
-| http://localhost:8081/pg-exporter/metrics | the Postgres exporter |
-| http://localhost:8081/blackbox | the blackbox exporter |
+| URL                                       | What                                            |
+| ----------------------------------------- | ----------------------------------------------- |
+| http://localhost:8081/                    | the newsletter form                             |
+| http://localhost:8081/api                 | backend, returns a plain text response          |
+| http://localhost:8081/api/form            | the entries, as JSON                            |
+| http://localhost:8081/grafana             | Grafana, dashboard provisioned, no login needed |
+| http://localhost:8081/prometheus          | Prometheus, four targets                        |
+| http://localhost:8081/pg-exporter/metrics | the Postgres exporter                           |
+| http://localhost:8081/blackbox            | the blackbox exporter                           |
 
 The frontend calls the backend at the relative path `/api/form`, so it only
 works behind the proxy. Opening the frontend container directly on port 3000
@@ -86,11 +86,3 @@ either.
 
 It adds a healthcheck to the frontend that the deployed compose files do not
 have, because `--wait` needs one to tell when the stack is ready.
-
-## Verified
-
-Started and checked on macOS 15 (arm64), Docker 29.3.1, on 18 August 2026:
-all nine containers healthy, form submission stored in Postgres and read back,
-the flag toggling the ten second delay in both directions, all four Prometheus
-targets up, both blackbox probes succeeding, and the dashboard from
-`g01-monitoring` returning data through Grafana.

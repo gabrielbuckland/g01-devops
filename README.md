@@ -76,15 +76,15 @@ flowchart TD
 The interesting parts of a pipeline are its failure modes. These are the ones
 this design has, read out of the configuration rather than assumed.
 
-| Stage | What happens when it fails |
-| --- | --- |
-| Build | The job fails and nothing is pushed. The previous image stays deployed, because deployment is a separate stage that is not reached. |
-| Tests | Same, with one exception: on branches matching `hotfix*` both test jobs are set to `allow_failure`, so a hotfix can reach deployment with failing tests. That is a deliberate trade, and it is the kind of thing worth defending out loud rather than hiding. |
-| Registry | Images are tagged with `CI_COMMIT_SHA`, never `latest`, so a deploy always names exactly one build. |
-| Deploy | This is the weak point. The job runs `compose down` before `compose up`, so the old version is stopped first. If the new one fails to become healthy within 180 seconds, the environment stays down. There is no rollback. |
-| Startup | Postgres has a readiness check, the backend has an HTTP healthcheck, and `up --wait` fails the job if either does not come up. The frontend has no healthcheck, so a broken frontend deploys as successful. |
-| Migration | Flyway runs inside the backend on startup. A failing migration fails the container, which fails the healthcheck, which fails the job. There is no down migration. |
-| After deploy | Nothing verifies that the application works, only that its containers are healthy. There are no smoke tests. |
+| Stage        | What happens when it fails                                                                                                                                                                                                                                    |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Build        | The job fails and nothing is pushed. The previous image stays deployed, because deployment is a separate stage that is not reached.                                                                                                                           |
+| Tests        | Same, with one exception: on branches matching `hotfix*` both test jobs are set to `allow_failure`, so a hotfix can reach deployment with failing tests. That is a deliberate trade, and it is the kind of thing worth defending out loud rather than hiding. |
+| Registry     | Images are tagged with `CI_COMMIT_SHA`, never `latest`, so a deploy always names exactly one build.                                                                                                                                                           |
+| Deploy       | This is the weak point. The job runs `compose down` before `compose up`, so the old version is stopped first. If the new one fails to become healthy within 180 seconds, the environment stays down. There is no rollback.                                    |
+| Startup      | Postgres has a readiness check, the backend has an HTTP healthcheck, and `up --wait` fails the job if either does not come up. The frontend has no healthcheck, so a broken frontend deploys as successful.                                                   |
+| Migration    | Flyway runs inside the backend on startup. A failing migration fails the container, which fails the healthcheck, which fails the job. There is no down migration.                                                                                             |
+| After deploy | Nothing verifies that the application works, only that its containers are healthy. There are no smoke tests.                                                                                                                                                  |
 
 ## Decisions and why
 
