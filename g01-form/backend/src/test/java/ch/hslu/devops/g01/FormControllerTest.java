@@ -3,6 +3,7 @@ package ch.hslu.devops.g01;
 import ch.hslu.devops.g01.backend.dto.CreateFormRequest;
 import ch.hslu.devops.g01.backend.entity.Form;
 import ch.hslu.devops.g01.backend.repository.FormRepository;
+import io.getunleash.Unleash;
 import io.micronaut.core.type.Argument;
 import io.micronaut.http.HttpRequest;
 import io.micronaut.http.HttpResponse;
@@ -26,7 +27,7 @@ import static org.mockito.Mockito.*;
 
 
 @MicronautTest
-public class FormControllerIT {
+public class FormControllerTest {
 
     @Inject
     @Client("/")
@@ -46,7 +47,7 @@ public class FormControllerIT {
         var f2 = new Form("b@example.com", "Bert", "Berg");
         when(repository.findAll()).thenReturn(List.of(f1, f2));
 
-        var req = HttpRequest.GET("/form/");
+        var req = HttpRequest.GET("/api/form/");
         HttpResponse<List<Form>> rsp = client.toBlocking()
                 .exchange(req, Argument.listOf(Form.class));
 
@@ -60,14 +61,16 @@ public class FormControllerIT {
     @Test
     void create_persistsAndNormalizesEmail() {
 
-        var input = new CreateFormRequest("  ZuErich@EXAMPLE.Com  ", "Max", "Meier");
+        // Surrounding whitespace is rejected by @Email before the controller sees it,
+        // so the case is what normalisation actually has to handle here.
+        var input = new CreateFormRequest("ZuErich@EXAMPLE.Com", "Max", "Meier");
 
-        when(repository.existsById("  ZuErich@EXAMPLE.Com  ")).thenReturn(false);
+        when(repository.existsById("zuerich@example.com")).thenReturn(false);
 
         when(repository.save(any(Form.class)))
                 .thenAnswer(inv -> inv.getArgument(0, Form.class));
 
-        var req = HttpRequest.POST("/form/", input);
+        var req = HttpRequest.POST("/api/form/", input);
         HttpResponse<Form> rsp = client.toBlocking()
                 .exchange(req, Form.class);
 
@@ -90,7 +93,7 @@ public class FormControllerIT {
 
         when(repository.existsById("exists@example.com")).thenReturn(true);
 
-        var req = HttpRequest.POST("/form/", input);
+        var req = HttpRequest.POST("/api/form/", input);
         var ex = assertThrows(HttpClientResponseException.class,
                 () -> client.toBlocking().exchange(req, Form.class));
 
@@ -104,7 +107,7 @@ public class FormControllerIT {
         when(repository.existsById(email)).thenReturn(true);
         doNothing().when(repository).deleteById(email);
 
-        var req = HttpRequest.DELETE("/form/delete/" + email);
+        var req = HttpRequest.DELETE("/api/form/delete/" + email);
         HttpResponse<?> rsp = client.toBlocking().exchange(req);
 
         assertEquals(HttpStatus.NO_CONTENT, rsp.getStatus());
@@ -116,7 +119,7 @@ public class FormControllerIT {
         String email = "missing@example.com";
         when(repository.existsById(email)).thenReturn(false);
 
-        var req = HttpRequest.DELETE("/form/delete/" + email);
+        var req = HttpRequest.DELETE("/api/form/delete/" + email);
         var ex = assertThrows(HttpClientResponseException.class,
                 () -> client.toBlocking().exchange(req));
 
@@ -130,7 +133,7 @@ public class FormControllerIT {
         var form = new Form(email, "Gina", "Gipfel");
         when(repository.findById(email)).thenReturn(Optional.of(form));
 
-        var req = HttpRequest.GET("/form/get/" + email);
+        var req = HttpRequest.GET("/api/form/get/" + email);
         HttpResponse<Form> rsp = client.toBlocking().exchange(req, Form.class);
 
         assertEquals(HttpStatus.OK, rsp.getStatus());
@@ -143,7 +146,7 @@ public class FormControllerIT {
         String email = "notfound@example.com";
         when(repository.findById(email)).thenReturn(Optional.empty());
 
-        var req = HttpRequest.GET("/form/get/" + email);
+        var req = HttpRequest.GET("/api/form/get/" + email);
         var ex = assertThrows(HttpClientResponseException.class,
                 () -> client.toBlocking().exchange(req, Form.class));
 
@@ -152,15 +155,27 @@ public class FormControllerIT {
 
     @Test
     void validation_invalidEmailYields400_onGet() {
-        var req = HttpRequest.GET("/form/get/not-an-email");
+        var req = HttpRequest.GET("/api/form/get/not-an-email");
         var ex = assertThrows(HttpClientResponseException.class,
                 () -> client.toBlocking().exchange(req, Form.class));
 
-        assertEquals(HttpStatus.NOT_FOUND, ex.getStatus());
+        assertEquals(HttpStatus.BAD_REQUEST, ex.getStatus());
     }
 
     @MockBean(FormRepository.class)
     FormRepository mockRepository() {
         return Mockito.mock(FormRepository.class);
+    }
+
+    /**
+     * No Unleash server is reachable from the tests, so the client reports every flag
+     * as disabled and the controller runs its deliberate ten second delay. That delay
+     * is the point of the feature flag demo, not something these tests are about.
+     */
+    @MockBean(Unleash.class)
+    Unleash mockUnleash() {
+        var unleash = Mockito.mock(Unleash.class);
+        when(unleash.isEnabled(anyString())).thenReturn(true);
+        return unleash;
     }
 }

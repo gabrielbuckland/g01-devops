@@ -25,7 +25,7 @@ backend:
     - if: $CI_COMMIT_BRANCH # only branches
   script:
     - cd backend
-    - echo "Building and pushing frontend image with tag - $CI_COMMIT_SHA"
+    - echo "Building and pushing backend image with tag - $CI_COMMIT_SHA"
     - |
       mvn -B \
         compile jib:build \
@@ -89,8 +89,7 @@ frontend-test:
       - frontend/.npm/
   script:
     - cd frontend
-    - ls -R src/lib/components
-    - npm ci ...
+    - npm ci
     - npm run test
 
 # ---------- Deploy: test (uses your utils.yml rules) ----------

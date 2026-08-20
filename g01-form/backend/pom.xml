@@ -207,6 +207,22 @@
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <systemPropertyVariables>
+            <!-- docker-java negotiates an API version below the minimum that Docker
+                 Engine 29 accepts (MinAPIVersion 1.40), so Testcontainers fails to
+                 detect the daemon. Pinning the version keeps the tests working on
+                 both older and newer engines. -->
+            <api.version>1.44</api.version>
+            <!-- The application pins port 8080; the tests must not, or they fail on
+                 any machine where something else already listens there. -->
+            <micronaut.server.port>-1</micronaut.server.port>
+          </systemPropertyVariables>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-enforcer-plugin</artifactId>
         <version>3.5.0</version>
         <dependencies>
