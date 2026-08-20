@@ -33,13 +33,18 @@ flowchart TD
 
     subgraph ci["GitLab CI, one pipeline per branch"]
         direction TB
-        sast["SAST, GitLab template"]
-        be["backend: Maven and Jib"]
-        fe["frontend: docker build"]
-        bt["backend-test: JUnit on dind"]
-        ft["frontend-test: Vitest on Playwright image"]
-        be --> bt
-        fe --> ft
+        subgraph cibuild["stage: build"]
+            direction LR
+            be["backend: Maven and Jib"]
+            fe["frontend: docker build"]
+        end
+        subgraph citest["stage: test, from source, not from the built images"]
+            direction LR
+            sast["SAST, GitLab template"]
+            bt["backend-test: mvn test on dind"]
+            ft["frontend-test: Vitest on Playwright image"]
+        end
+        cibuild --> citest
     end
 
     ci --> reg["GitLab container registry<br/>images tagged with the commit SHA"]
@@ -54,19 +59,23 @@ flowchart TD
         direction LR
         traefik["Traefik"] --> frontend["SvelteKit"]
         traefik --> backend["Micronaut"]
+        traefik --> pgx["postgres-exporter"]
         backend --> pg[("Postgres<br/>Flyway on startup")]
-        pgx["postgres-exporter"] --> pg
+        pgx --> pg
     end
 
     vmtest --> vm
     vmprod --> vm
 
     subgraph mon["srv-003, deployed by its own pipeline"]
-        prom["Prometheus, scrape every 15s"] --> graf["Grafana"]
-        bb["blackbox-exporter"]
+        direction LR
+        mtraefik["Traefik"] --> prom["Prometheus, scrape every 15s"]
+        mtraefik --> graf["Grafana"]
+        mtraefik --> bb["blackbox-exporter"]
+        prom --> graf
     end
 
-    pgx -.->|metrics| prom
+    traefik -.->|"scraped at /pg-exporter/metrics"| prom
     traefik -.->|http probe| bb
     bb -.-> prom
 ```
