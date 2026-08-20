@@ -23,9 +23,12 @@ name. And the pipeline had to be the artefact, not a means to an end.
 ## Architecture
 
 Three repositories, kept as directories here so the parts can be read
-together: `g01-form` is the application and its pipeline, `g01-monitoring` is
-the Prometheus and Grafana stack, `g01-documentation` is the module report.
-`devops-stack` is not part of the coursework and is explained further down.
+together: [`g01-form`](g01-form) is the application and its pipeline,
+[`g01-monitoring`](g01-monitoring) is the Prometheus and Grafana stack,
+[`g01-documentation`](g01-documentation) is the module report. Each has its own
+readme covering how that part is built and run.
+[`devops-stack`](devops-stack) is not part of the coursework and is explained
+further down.
 
 ```mermaid
 flowchart TD

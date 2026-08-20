@@ -1,53 +1,40 @@
 # Modul DEVOPS - g01
 
-Dokumentation der Gruppe g01 im Modul DEVOPS HS25.
+Der Modulbericht der Gruppe g01, DEVOPS HS25. AsciiDoc unter
+`src/docs/asciidoc`, gebaut mit Maven und Asciidoctor. Braucht ein JDK 21 und
+Maven, sonst nichts:
 
-## Links
+```bash
+mvn clean site
+```
 
-* [Maven Site Dokumentation](https://hslu.pages.switch.ch/edu/bachelor-computer-science/devops/25hs01/g01/g01-documentation)
-* [AsciiDoc Dokumentation](https://hslu.pages.switch.ch/edu/bachelor-computer-science/devops/25hs01/g01/g01-documentation/asciidoc/index.html) [(PDF)](https://hslu.pages.switch.ch/edu/bachelor-computer-science/devops/25hs01/g01/g01-documentation/asciidoc/index.pdf)
+Asciidoctor hängt an der `site`-Phase, `mvn package` erzeugt also nichts.
+Danach liegen die Kapitel als HTML und PDF in `target/generated-docs`, die
+Maven-Site in `target/site`. Die veröffentlichte Fassung lag auf den GitLab
+Pages der Hochschule und ist von aussen nicht mehr erreichbar, deshalb sind
+hier keine Links darauf.
 
-## Vorschlag Projekt
+## Kapitel
 
-### Simples UI
+| Datei                              | Inhalt                                                    |
+| ---------------------------------- | --------------------------------------------------------- |
+| `01_uebersicht.adoc`               | Projektstruktur, Branching-Strategie, Technologiewahl     |
+| `02_1_deployment_setup.adoc`       | Jib, Docker in der Pipeline, Deployment auf die VMs       |
+| `02_2_vm_setup.adoc`               | Aufsetzen der Lab-VMs                                     |
+| `03_1_basisszenarien.adoc`         | Change-Request von der Umsetzung bis zur Produktion       |
+| `03_2_erweiterte_szenarien.adoc`   | Hotfix-Vorgehen und kontrolliertes Schnell-Deployment     |
+| `03_3_individuelle_szenarien.adoc` | Flyway-Migration, 12-Factor-Betrachtung, Lessons Learned  |
 
-- Formular
-- Speicherung
-- Anzeigen der Einträge
-- Technologie: Svelte
-- build: npm & node 22.22.0
+## Umgebung
 
-### Backend
+Die VMs im HSLU-Labornetz, je eine pro Gruppenmitglied verwaltet:
 
-- einträge speichern via REST
-- einträge anzeigen via REST
-- Persistenz mit Postgres
-- Technologie: Micronaut Java 21
-- build: maven
+| Host    | Rolle                |
+| ------- | -------------------- |
+| srv-020 | Test-Umgebung        |
+| srv-021 | Produktions-Umgebung |
+| srv-003 | Monitoring           |
 
-### CI
-
-- Gitlab
-
-### Artifact storage
-
-- Gitlab
-
-### Security scans
-
-- Gitlab
-
-### Environments
-
-- Test
-- Prod
-
-## VMs
-
-| VM owner | hostname                     | username | usage    |
-|----------|------------------------------|----------|----------|
-| gabriel  | srv-003.devops.ls.eee.intern | labadmin |          |
-| bleron   | srv-012.devops.ls.eee.intern | labadmin |          |
-| nevi     | srv-020.devops.ls.eee.intern | labadmin | TEST env |
-| lukas    | srv-021.devops.ls.eee.intern | labadmin | PROD env |
-
+Die Maschinen sind nur aus dem Hochschulnetz erreichbar und uns nicht mehr
+zugänglich. `devops-stack` im Wurzelverzeichnis bildet dieselbe Topologie
+lokal auf einem Rechner ab.
