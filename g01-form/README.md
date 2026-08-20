@@ -32,7 +32,7 @@ docker compose -f docker_local.yml up -d
 
 ```bash
 mvn package
-MICRONAUT_ENVIRONMENTS=local java -jar ./target/g01-form-0.1.jar
+MICRONAUT_ENVIRONMENTS=local java -jar ./backend/target/backend-0.1.jar
 # or use your IDE build to start the Java application
 
 ```

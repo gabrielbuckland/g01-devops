@@ -26,9 +26,10 @@ The dev server listens on port 3000 and proxies `/api` to a backend on
 npm test
 ```
 
-Vitest runs two projects. `server` covers the plain TypeScript under
-`src/lib` in Node. `client` renders the Svelte components in headless Chromium
-through Playwright, so a browser has to be installed first:
+Vitest is configured with two projects. `client` renders the Svelte components
+in headless Chromium through Playwright and holds the only tests there are.
+`server` is set up for plain TypeScript under `src/lib` in Node but is
+currently empty. Running the suite needs a browser, so install one first:
 
 ```bash
 npx playwright install --with-deps chromium

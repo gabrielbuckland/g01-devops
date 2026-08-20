@@ -14,10 +14,13 @@ This guide assumes your separate application stack (like `g01-form`) is already 
 
 ### 1. Configure Prometheus
 
-Before starting, you must tell Prometheus where to find your application's metrics.
+Prometheus needs to know where to find your application's metrics.
 
-1.  Edit the Prometheus config file: `./prometheus/prometheus.yml`
-2.  Ensure the `local-postgres` job is configured to scrape your host machine's port. The special name `host.docker.internal` allows the container to find your `localhost`.
+1.  The local stack mounts `./prometheus/prometheus_local.yml` — not
+    `prometheus.yml`, which holds the lab targets used by the deployment.
+2.  It already contains the `local-postgres` job below, so there is nothing to
+    change unless your exporter runs somewhere else. The special name
+    `host.docker.internal` allows the container to find your `localhost`.
 
     ```yaml
     global:
@@ -40,7 +43,7 @@ Before starting, you must tell Prometheus where to find your application's metri
 With the configuration saved, start the monitoring stack:
 
 ```bash
-docker-compose -f docker_local.yml up -d --build
+docker compose -f docker_local.yml up -d
 ```
 
 ### 3. Access Your Services
