@@ -10,7 +10,10 @@ own it renders, but every submission fails. See
 
 ## Development
 
-Requires Node 22, the version the image is built from.
+Needs Node `^20.19.0 || >=22.12.0`, which is what Vite requires and what
+`engines` in `package.json` declares. Note the gap: Node 21 and 22.0 to 22.11
+do not satisfy it. The production image builds on Node 22.12, which is a
+separate thing from what the sources need to run.
 
 ```bash
 npm ci

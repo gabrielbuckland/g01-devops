@@ -93,7 +93,9 @@ mvn test
 
 ### Requirements
 
-- Node.js (>= 20.19.0)
+- Node.js `^20.19.0 || >=22.12.0`, declared as `engines` in
+  [frontend/package.json](frontend/package.json). Node 21 and 22.0 to 22.11 do
+  not satisfy it, because that is the range Vite supports.
 - npm (>= 10)
 
 ### Steps
