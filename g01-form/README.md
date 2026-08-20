@@ -1,6 +1,12 @@
 # g01-form
 
-A [Micronaut](https://micronaut.io/) Java application built for demonstrating DEVOPS practices.
+A [Micronaut](https://micronaut.io/) Java backend and a SvelteKit frontend, the
+application the delivery chain was built around.
+
+`docker_test.yml` and `docker_prod.yml` pull images from the GitLab container
+registry of the school, which is not reachable from outside. To run the whole
+system from source instead, use [devops-stack](../devops-stack) in the
+repository root.
 
 ---
 
@@ -48,7 +54,7 @@ This setup also boots up traefik that manages the traffic to the frontend and ba
 cp .env.example .env
 ```
 
-1. Start the application and database using the test compose file:
+2. Start the application and database using the test compose file:
 
 ```bash
 docker compose -f docker_test.yml up -d
@@ -64,7 +70,7 @@ docker compose -f docker_test.yml up -d
 cp .env.example .env
 ```
 
-1. Start the application and database using the production compose file:
+2. Start the application and database using the production compose file:
 
 ```bash
 docker compose -f docker_prod.yml up -d
@@ -72,7 +78,7 @@ docker compose -f docker_prod.yml up -d
 # if not, add the `--env-file .env` option
 ```
 
-1. Access the application under [http://localhost](http://localhost). Or the corresponding server IP/domain.
+3. Access the application under [http://localhost](http://localhost), or the corresponding server IP or domain.
 
 
 ---
@@ -92,19 +98,22 @@ mvn test
 
 ### Steps
 
-1. Wechsel in das Frontend-Verzeichnis:
+1. Change into the frontend directory:
+
    ```bash
    cd frontend
-
    ```
-2. Install dependencies
+
+2. Install dependencies:
 
    ```bash
-   npm install
-
+   npm ci
    ```
 
-3. Start Server
+3. Start the dev server:
+
    ```bash
    npm run dev -- --open
    ```
+
+See [frontend/README.md](frontend/README.md) for the rest.

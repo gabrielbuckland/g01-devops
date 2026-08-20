@@ -1,6 +1,12 @@
 # g01-monitoring
 
-This project runs Grafana and Prometheus to monitor your applications.
+The monitoring side of the g01 delivery chain: Prometheus, Grafana and a
+blackbox exporter behind Traefik, deployed to its own VM by its own pipeline.
+`docker-compose.yml` is what ran there; `docker_local.yml` is the cut-down
+version described below.
+
+To see this stack running against the actual application without the lab
+network, use [devops-stack](../devops-stack) instead.
 
 ## Local Development
 

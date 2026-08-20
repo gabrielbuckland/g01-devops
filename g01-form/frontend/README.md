@@ -1,38 +1,44 @@
-# sv
+# g01-form frontend
 
-Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
+The newsletter form. SvelteKit on `adapter-node`, Tailwind, form components
+from shadcn-svelte under `src/lib/components/ui`.
 
-## Creating a project
+It posts to the backend at the relative path `/api/form`, which means it only
+works behind the Traefik proxy that serves both from one origin. Started on its
+own it renders, but every submission fails. See
+[devops-stack](../../devops-stack) to run the whole system locally.
 
-If you're seeing this, you've probably already done this step. Congrats!
+## Development
 
-```sh
-# create a new project in the current directory
-npx sv create
+Requires Node 22, the version the image is built from.
 
-# create a new project in my-app
-npx sv create my-app
-```
-
-## Developing
-
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
-
-```sh
+```bash
+npm ci
 npm run dev
-
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
 ```
 
-## Building
+The dev server listens on port 3000 and proxies `/api` to a backend on
+`localhost:8080`, so the same relative path works without a proxy in front.
 
-To create a production version of your app:
+## Tests
 
-```sh
-npm run build
+```bash
+npm test
 ```
 
-You can preview the production build with `npm run preview`.
+Vitest runs two projects. `server` covers the plain TypeScript under
+`src/lib` in Node. `client` renders the Svelte components in headless Chromium
+through Playwright, so a browser has to be installed first:
 
-> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
+```bash
+npx playwright install --with-deps chromium
+```
+
+## Build
+
+```bash
+npm run build     # into build/, served by `node build/index.js`
+npm run check     # svelte-check against tsconfig.json
+```
+
+The `Dockerfile` does the same in two stages and is what CI builds and pushes.
